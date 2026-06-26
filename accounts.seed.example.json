@@ -1,0 +1,17 @@
+{
+  "_comment": "Account seed example. Copy to ~/.config/trayops/accounts.seed.json and fill in YOUR real values. That actual file is NOT version-controlled (see .gitignore). If the seed file does not exist, the account list starts empty and you add accounts via the GUI or CLI.",
+  "accounts": [
+    {
+      "label": "personal",
+      "gitName": "octocat",
+      "gitEmail": "you@example.com",
+      "identityFile": "~/.ssh/id_ed25519"
+    },
+    {
+      "label": "work",
+      "gitName": "octocat-work",
+      "gitEmail": "you@work.example.com",
+      "identityFile": "~/.ssh/id_ed25519_work"
+    }
+  ]
+}

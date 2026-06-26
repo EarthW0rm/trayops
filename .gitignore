@@ -1,0 +1,26 @@
+# === Sensitive data / local configuration (NEVER version) ===
+# Real account seed (git identities + SSH key paths) lives outside the repo,
+# at ~/.config/trayops/accounts.seed.json. These patterns are defense in depth
+# in case a real seed is created inside the project directory.
+*.seed.json
+!accounts.seed.example.json
+accounts.seed.json
+*.local.json
+.env
+.env.*
+secrets/
+
+# === Swift Package Manager / build ===
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+Package.resolved
+
+# === Serena (cache and local overrides) ===
+.serena/cache/
+.serena/project.local.yml
+
+# === macOS ===
+.DS_Store
