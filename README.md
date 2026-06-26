@@ -101,6 +101,13 @@ trayops docker shutdown           # rdctl shutdown
 The CLI reports success/failure via the **exit code** (0 success, ≠ 0 failure) and a
 human-readable message.
 
+## Logs
+
+Both frontends write a troubleshooting log to `~/Library/Logs/TrayOps/trayops.log`,
+recording every external command (git/rdctl/docker) with its exit code, duration,
+spawn failures and timeouts. External calls are bounded by a timeout (default 30s,
+`TRAYOPS_PROCESS_TIMEOUT`). See [INSTALL.md](INSTALL.md#logs).
+
 ## Testing
 
 The suites exercise the app through its real entry points — the `trayops` binary and

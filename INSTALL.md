@@ -207,10 +207,38 @@ swiftly install latest
 > macOS 26 SDK, which the ViewInspector test dependency references. Use `swiftly` for
 > other Swift work; build/test TrayOps with the default `/usr/bin/swift`.
 
+## Logs
+
+For troubleshooting, TrayOps writes a log to:
+
+```
+~/Library/Logs/TrayOps/trayops.log
+```
+
+Every external command (git, rdctl, docker) is recorded with its exit code and
+duration, plus spawn failures and timeouts. Both the GUI and the CLI append to the
+same file (created `0600`).
+
+```bash
+tail -f ~/Library/Logs/TrayOps/trayops.log
+```
+
+```
+2026-06-26T02:01:45.161Z [DEBUG]   exec: /Users/you/.rd/bin/docker info
+2026-06-26T02:01:45.186Z [WARNING] exit 1 in 25ms: /Users/you/.rd/bin/docker info
+2026-06-26T02:01:50.402Z [ERROR]   timeout after 30s: /Users/you/.rd/bin/rdctl start
+```
+
+External commands are bounded by a timeout (default **30s**) so a hung tool cannot
+stall the platform; override it with `TRAYOPS_PROCESS_TIMEOUT=<seconds>`. The log may
+contain config values (identities, key **paths** — never key contents) and is local
+and user-only; `./scripts/uninstall.sh --purge` removes it along with the store.
+
 ## Troubleshooting
 
 | Symptom | Cause / fix |
 |---|---|
+| Anything misbehaving | Check `~/Library/Logs/TrayOps/trayops.log` — it records every command, exit code, duration and timeout. |
 | `no such module 'Testing'` when running tests | You ran bare `swift test`. Use `./scripts/test.sh`. |
 | `Library not loaded: @rpath/lib_TestingInterop.dylib` | Same — the wrapper adds the required `-rpath`. |
 | GUI shows nothing | It is a menu-bar app — look in the macOS status bar, not the Dock. |

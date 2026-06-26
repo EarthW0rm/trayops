@@ -28,8 +28,9 @@ if [ -e "${BIN_DIR}/trayops" ]; then
 fi
 
 if [ "${1:-}" = "--purge" ]; then
-    echo "==> removing local account data"
+    echo "==> removing local account data and logs"
     rm -rf "${HOME}/Library/Application Support/TrayOps"
+    rm -rf "${HOME}/Library/Logs/TrayOps"
 fi
 
 echo "TrayOps uninstalled."

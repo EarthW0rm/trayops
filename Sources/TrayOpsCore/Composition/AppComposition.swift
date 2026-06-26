@@ -58,7 +58,9 @@ public struct AppComposition {
         self.mediator = mediator
         self.registry = registry
         self.stateStore = stateStore
-        self.poller = StatePoller(mediator: mediator)
+        self.poller = StatePoller(mediator: mediator, logger: environment.logger)
+
+        environment.logger.info("TrayOps initialized — functions: \(features.map(\.id).joined(separator: ", "))")
     }
 
     /// Convenience factory using production boundaries.

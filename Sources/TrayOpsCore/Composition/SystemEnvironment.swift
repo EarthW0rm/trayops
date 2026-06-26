@@ -19,6 +19,8 @@ public struct SystemEnvironment {
     public let gitHubHost: String
     /// Location of the JSON account store (sandboxed in tests).
     public let accountsStoreURL: URL
+    /// Troubleshooting log sink (file in production, no-op in tests).
+    public let logger: Logger
 
     public init(
         processRunner: ProcessRunner,
@@ -28,7 +30,8 @@ public struct SystemEnvironment {
         gitConfigGlobalPath: String? = nil,
         seedURL: URL? = nil,
         gitHubHost: String = "github.com",
-        accountsStoreURL: URL
+        accountsStoreURL: URL,
+        logger: Logger = NullLogger()
     ) {
         self.processRunner = processRunner
         self.binaryLocator = binaryLocator
@@ -38,6 +41,7 @@ public struct SystemEnvironment {
         self.seedURL = seedURL
         self.gitHubHost = gitHubHost
         self.accountsStoreURL = accountsStoreURL
+        self.logger = logger
     }
 
     /// Production boundaries: real process runner, real paths, on-disk store.
@@ -54,8 +58,12 @@ public struct SystemEnvironment {
         )
         let accountsStoreURL = URL(fileURLWithPath: "\(supportDirectory)/accounts.json")
 
+        // Troubleshooting log under the standard macOS user logs location.
+        let logger = FileLogger(fileURL: URL(fileURLWithPath: "\(home)/Library/Logs/TrayOps/trayops.log"))
+        let timeout = environment["TRAYOPS_PROCESS_TIMEOUT"].flatMap(Double.init) ?? 30
+
         return SystemEnvironment(
-            processRunner: FoundationProcessRunner(),
+            processRunner: FoundationProcessRunner(logger: logger, timeout: timeout),
             binaryLocator: DefaultBinaryLocator(home: home),
             homeDirectory: home,
             sshConfigPath: "\(home)/.ssh/config",
@@ -65,7 +73,8 @@ public struct SystemEnvironment {
                 home: home,
                 currentDirectory: FileManager.default.currentDirectoryPath
             ),
-            accountsStoreURL: accountsStoreURL
+            accountsStoreURL: accountsStoreURL,
+            logger: logger
         )
     }
 }
