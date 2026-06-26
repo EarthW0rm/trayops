@@ -72,11 +72,12 @@ swift run TrayOpsApp              # launch the app in the menu bar (no Dock icon
 swift run trayops --help          # CLI — full parity with the GUI
 ./scripts/test.sh                 # run the test suites (see INSTALL.md for why)
 
-make app                          # package a standalone dist/TrayOpsApp.app
+make install                      # install app to /Applications + trayops CLI on PATH
 ```
 
 See **[INSTALL.md](INSTALL.md)** for prerequisites, the toolchain note, installing
-**permanently as a `.app`** (with login-at-startup), and account seeding.
+**permanently** (app + CLI, login-at-startup, **updating** and **uninstalling**), and
+account seeding.
 
 ## CLI
 

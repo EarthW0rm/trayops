@@ -1,4 +1,4 @@
-.PHONY: build test run-gui run-cli icon app clean
+.PHONY: build test run-gui run-cli icon app install uninstall clean
 
 build:
 	swift build
@@ -20,6 +20,14 @@ icon:
 # Build the standalone dist/TrayOpsApp.app bundle.
 app:
 	./scripts/build-app.sh
+
+# Install the app to /Applications and the trayops CLI onto the PATH.
+install:
+	./scripts/install.sh
+
+# Remove the app, the CLI and the login item (add --purge for data via the script).
+uninstall:
+	./scripts/uninstall.sh
 
 clean:
 	rm -rf .build dist

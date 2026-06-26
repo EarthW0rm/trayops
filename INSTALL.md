@@ -43,25 +43,76 @@ cp .build/release/trayops /usr/local/bin/trayops
 ## Install permanently as an app
 
 `swift run TrayOpsApp` is fine for development, but it ties the app to the terminal
-session. To install it as a standalone, always-available menu-bar app, package it
-into a `TrayOpsApp.app` bundle.
+session. To install TrayOps for good — the menu-bar app **and** the `trayops` CLI on
+your `PATH` — run:
 
 ```bash
-make app                 # builds release + assembles dist/TrayOpsApp.app
-# or: ./scripts/build-app.sh
-
-cp -R dist/TrayOpsApp.app /Applications/
-open /Applications/TrayOpsApp.app
+make install
+# or: ./scripts/install.sh
 ```
 
-`scripts/build-app.sh` builds the release binary, writes `Info.plist`
-(`LSUIElement` = a menu-bar agent, no Dock icon), copies the icon, and ad-hoc
-code-signs the bundle. The app's icon is **`Resources/AppIcon.icns`** (committed). To
-change the design, edit `scripts/generate-icon.swift` and regenerate:
+This:
+
+1. builds the release binaries and packages `TrayOpsApp.app`;
+2. installs the app to `/Applications`;
+3. installs the `trayops` CLI to `/usr/local/bin` (override with
+   `TRAYOPS_BIN_DIR=…`; `sudo` is requested only if the target needs it).
+
+Then launch the GUI from Spotlight/Finder (`TrayOpsApp`) and use `trayops` from any
+terminal:
+
+```bash
+open /Applications/TrayOpsApp.app
+trayops status
+```
+
+> If the installer reports that the CLI directory is not on your `PATH`, add it to
+> your shell profile, e.g. `echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.zshrc`,
+> or set `TRAYOPS_BIN_DIR` to a directory already on your `PATH` (such as
+> `/opt/homebrew/bin`) and re-run `make install`.
+
+### Build the bundle only
+
+To assemble the `.app` without installing it (e.g. to inspect `dist/TrayOpsApp.app`):
+
+```bash
+make app
+```
+
+`scripts/build-app.sh` builds the release binary, writes `Info.plist` (`LSUIElement`
+= a menu-bar agent, no Dock icon), copies the icon, and ad-hoc code-signs the bundle.
+The app's icon is **`Resources/AppIcon.icns`** (committed). To change the design, edit
+`scripts/generate-icon.swift` and regenerate:
 
 ```bash
 make icon                # regenerates Resources/AppIcon.icns (+ a PNG preview)
 ```
+
+### Updating
+
+Pull the latest code and re-run the installer — it rebuilds and replaces both the app
+and the CLI in place:
+
+```bash
+git pull
+make install
+```
+
+(If the app was running, quit it from the menu bar first, or it will pick up the new
+version on next launch.)
+
+### Uninstalling
+
+```bash
+make uninstall                 # removes the app, the CLI and the login item
+# or: ./scripts/uninstall.sh
+
+./scripts/uninstall.sh --purge # also deletes local account data
+```
+
+> Uninstalling does **not** revert your git identity or `~/.ssh/config` — those are
+> your real configuration, not owned by TrayOps. `--purge` only removes TrayOps's own
+> store at `~/Library/Application Support/TrayOps`.
 
 ### Launch at login
 
