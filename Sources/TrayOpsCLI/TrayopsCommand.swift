@@ -8,6 +8,6 @@ struct TrayopsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "trayops",
         abstract: "Personal macOS tray operations platform — CLI frontend.",
-        subcommands: [GitHubCommand.self, StatusCommand.self, ReconcileAllCommand.self]
+        subcommands: [GitHubCommand.self, DockerCommand.self, StatusCommand.self, ReconcileAllCommand.self]
     )
 }

@@ -45,6 +45,8 @@ public struct RootPanelView: View {
         switch feature.id {
         case "github-account":
             GitHubAccountPanelView(mediator: composition.mediator, stateStore: composition.stateStore)
+        case "docker":
+            DockerPanelView(mediator: composition.mediator, stateStore: composition.stateStore)
         default:
             HStack {
                 Image(systemName: feature.systemImage)

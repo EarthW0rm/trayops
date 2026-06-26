@@ -46,6 +46,8 @@ enum StateSummary {
         switch state {
         case let gitHub as GitHubAccountState:
             return gitHub.summary
+        case let docker as DockerState:
+            return docker.summary
         default:
             return "—"
         }

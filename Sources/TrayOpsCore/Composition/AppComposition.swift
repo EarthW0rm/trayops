@@ -37,7 +37,16 @@ public struct AppComposition {
             target: AccountTarget()
         )
 
-        let features: [any Feature] = [gitHub]
+        // Docker Control Function (RN-P-07: adding it touches only this list).
+        let docker = DockerFeature(
+            service: DefaultDockerService(
+                runner: environment.processRunner,
+                locator: environment.binaryLocator
+            ),
+            stateStore: stateStore
+        )
+
+        let features: [any Feature] = [gitHub, docker]
 
         let registry = FeatureRegistry(features: features)
         registry.registerAll(on: mediator)
