@@ -48,34 +48,38 @@ public struct GitHubAccountContentView: View {
     }
 }
 
-/// Container that wires the presentation to the Mediator (no business logic).
+/// Container that wires the presentation to the Mediator (no business logic). The
+/// displayed state comes from the observed ``StateStore`` (RN-P-01); actions
+/// trigger a `RefreshAll` so the snapshot updates.
 public struct GitHubAccountPanelView: View {
     private let mediator: Mediator
+    private let stateStore: StateStore
     @State private var accounts: [AccountDTO] = []
-    @State private var state: GitHubAccountState = .unknown
     @State private var selectedID: UUID?
 
-    public init(mediator: Mediator) {
+    public init(mediator: Mediator, stateStore: StateStore) {
         self.mediator = mediator
+        self.stateStore = stateStore
     }
 
     private enum ActionKind { case apply, reconcile }
 
     public var body: some View {
-        GitHubAccountContentView(
+        let state = (stateStore.snapshot(for: "github-account") as? GitHubAccountState) ?? .unknown
+        return GitHubAccountContentView(
             state: state,
             accounts: accounts,
             selectedID: $selectedID,
             onSet: { dispatch(.apply) },
             onReconcile: { dispatch(.reconcile) }
         )
-        .task { await reload() }
+        .task { await initialLoad() }
     }
 
-    private func reload() async {
+    private func initialLoad() async {
         accounts = (try? await mediator.send(ListAccounts())) ?? []
-        state = (try? await mediator.send(ResolveGitHubState())) ?? .unknown
         if selectedID == nil { selectedID = accounts.first?.id }
+        _ = try? await mediator.send(RefreshAll())
     }
 
     private func dispatch(_ kind: ActionKind) {
@@ -85,7 +89,7 @@ public struct GitHubAccountPanelView: View {
             case .apply: _ = try? await mediator.send(ApplyAccount(id: id))
             case .reconcile: _ = try? await mediator.send(ReconcileAccount(id: id))
             }
-            await reload()
+            _ = try? await mediator.send(RefreshAll())
         }
     }
 }

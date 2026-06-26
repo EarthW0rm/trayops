@@ -25,6 +25,9 @@ public struct RootPanelView: View {
                     featureView(for: feature)
                     Divider()
                 }
+                Button("Reconcile All") {
+                    Task { _ = try? await composition.mediator.send(ReconcileAll()) }
+                }
             }
 
             Button("Quit TrayOps") {
@@ -41,7 +44,7 @@ public struct RootPanelView: View {
     private func featureView(for feature: any Feature) -> some View {
         switch feature.id {
         case "github-account":
-            GitHubAccountPanelView(mediator: composition.mediator)
+            GitHubAccountPanelView(mediator: composition.mediator, stateStore: composition.stateStore)
         default:
             HStack {
                 Image(systemName: feature.systemImage)

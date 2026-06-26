@@ -12,6 +12,7 @@ public struct AppComposition {
     public let mediator: Mediator
     public let registry: FeatureRegistry
     public let stateStore: StateStore
+    public let poller: StatePoller
 
     public init(environment: SystemEnvironment) throws {
         self.environment = environment
@@ -41,9 +42,14 @@ public struct AppComposition {
         let registry = FeatureRegistry(features: features)
         registry.registerAll(on: mediator)
 
+        // Platform-level handlers (RN-P-02/03).
+        mediator.register(RefreshAllHandler(registry: registry, stateStore: stateStore))
+        mediator.register(ReconcileAllHandler(registry: registry, stateStore: stateStore))
+
         self.mediator = mediator
         self.registry = registry
         self.stateStore = stateStore
+        self.poller = StatePoller(mediator: mediator)
     }
 
     /// Convenience factory using production boundaries.
