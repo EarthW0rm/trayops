@@ -8,13 +8,14 @@ import TrayOpsTestSupport
 @Suite("UI smoke")
 @MainActor
 struct UISmokeTests {
-    @Test("empty panel shows the placeholder text")
-    func emptyPanelShowsPlaceholder() throws {
+    @Test("root panel renders the registered feature and a Quit button")
+    func rootPanelRenders() throws {
         let test = try TestComposition()
         let view = RootPanelView(composition: test.composition)
 
-        let text = try view.inspect().find(text: "No functions registered")
-
-        #expect(try text.string() == "No functions registered")
+        // The GitHub Account Function's panel is rendered…
+        _ = try view.inspect().find(text: "GitHub Account")
+        // …alongside the platform's Quit control.
+        _ = try view.inspect().find(button: "Quit TrayOps")
     }
 }

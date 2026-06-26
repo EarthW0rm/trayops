@@ -11,7 +11,11 @@ struct TrayOpsApp: App {
 
     init() {
         NSApplication.shared.setActivationPolicy(.accessory)
-        _composition = State(initialValue: AppComposition.live())
+        do {
+            _composition = State(initialValue: try AppComposition.live())
+        } catch {
+            fatalError("TrayOps failed to initialize: \(error)")
+        }
     }
 
     var body: some Scene {

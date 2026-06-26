@@ -22,19 +22,31 @@ public struct RootPanelView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(composition.registry.features, id: \.id) { feature in
-                    HStack {
-                        Image(systemName: feature.systemImage)
-                        Text(feature.title)
-                    }
+                    featureView(for: feature)
+                    Divider()
                 }
             }
 
-            Divider()
             Button("Quit TrayOps") {
                 NSApplication.shared.terminate(nil)
             }
         }
         .padding(12)
         .frame(width: 300)
+    }
+
+    /// Resolves the view for a Feature. Adding a Feature adds a case here (a GUI
+    /// concern); the core, Mediator and poller are untouched (RN-P-07).
+    @ViewBuilder
+    private func featureView(for feature: any Feature) -> some View {
+        switch feature.id {
+        case "github-account":
+            GitHubAccountPanelView(mediator: composition.mediator)
+        default:
+            HStack {
+                Image(systemName: feature.systemImage)
+                Text(feature.title)
+            }
+        }
     }
 }

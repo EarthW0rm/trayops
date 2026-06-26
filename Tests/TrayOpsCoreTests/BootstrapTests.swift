@@ -4,11 +4,11 @@ import TrayOpsTestSupport
 
 @Suite("Composition bootstrap")
 struct BootstrapTests {
-    @Test("composition builds an empty registry over sandbox boundaries")
-    func buildsEmptyRegistry() throws {
+    @Test("composition registers the GitHub Account Function over sandbox boundaries")
+    func registersFeatures() throws {
         let test = try TestComposition()
 
-        #expect(test.composition.registry.features.isEmpty)
+        #expect(test.composition.registry.features.contains { $0.id == "github-account" })
     }
 
     @Test("StateStore publishes and retrieves a snapshot")
