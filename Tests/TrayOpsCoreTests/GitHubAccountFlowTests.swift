@@ -104,6 +104,23 @@ struct GitHubAccountFlowTests {
         }
     }
 
+    @Test("UpdateAccount persists the new field values")
+    func updateAccountPersists() async throws {
+        let test = try TestComposition()
+        let created = try await test.mediator.send(AddAccount(
+            label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"
+        ))
+
+        let updated = try await test.mediator.send(UpdateAccount(
+            id: created.id, label: "personal", gitName: "octocat-2", gitEmail: "octo2@example.com", identityFile: "~/.ssh/id2"
+        ))
+        #expect(updated.gitName == "octocat-2")
+
+        let reloaded = try await test.mediator.send(ListAccounts()).first { $0.id == created.id }
+        #expect(reloaded?.gitEmail == "octo2@example.com")
+        #expect(reloaded?.identityFile == "~/.ssh/id2")
+    }
+
     @Test("CRUD rejects empty fields and removes accounts")
     func crud() async throws {
         let test = try TestComposition()

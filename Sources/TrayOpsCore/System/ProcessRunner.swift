@@ -49,14 +49,27 @@ public struct FoundationProcessRunner: ProcessRunner {
         process.standardError = stderrPipe
 
         try process.run()
-        let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+
+        // Drain both pipes concurrently: reading them sequentially could deadlock
+        // if the child fills one pipe's buffer while we block on the other.
+        async let stdoutData = readToEnd(stdoutPipe.fileHandleForReading)
+        async let stderrData = readToEnd(stderrPipe.fileHandleForReading)
+        let (out, err) = await (stdoutData, stderrData)
         process.waitUntilExit()
 
         return ProcessOutput(
             exitCode: process.terminationStatus,
-            stdout: String(decoding: stdoutData, as: UTF8.self),
-            stderr: String(decoding: stderrData, as: UTF8.self)
+            stdout: String(decoding: out, as: UTF8.self),
+            stderr: String(decoding: err, as: UTF8.self)
         )
+    }
+
+    private func readToEnd(_ handle: FileHandle) async -> Data {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                let data = handle.readDataToEndOfFile()
+                continuation.resume(returning: data)
+            }
+        }
     }
 }

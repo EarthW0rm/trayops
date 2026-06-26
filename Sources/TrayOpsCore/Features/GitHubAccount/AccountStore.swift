@@ -112,12 +112,32 @@ public final class JSONAccountStore: AccountStore {
             withIntermediateDirectories: true
         )
         try data.write(to: url, options: [.atomic])
+        // The file holds emails and key paths (PII): keep it user-only (0600).
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
     }
 
     private static func load(from url: URL) -> [Account] {
-        guard let data = try? Data(contentsOf: url) else { return [] }
+        let fileManager = FileManager.default
+        guard fileManager.fileExists(atPath: url.path) else { return [] }
+        guard let data = try? Data(contentsOf: url) else {
+            warn("could not read accounts file at \(url.path); starting empty")
+            return []
+        }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return (try? decoder.decode(AccountsFile.self, from: data))?.accounts ?? []
+        do {
+            return try decoder.decode(AccountsFile.self, from: data).accounts
+        } catch {
+            // Preserve the corrupt file instead of silently overwriting it.
+            let backup = url.appendingPathExtension("corrupt")
+            try? fileManager.removeItem(at: backup)
+            try? fileManager.moveItem(at: url, to: backup)
+            warn("invalid accounts file; backed up to \(backup.path) and starting empty")
+            return []
+        }
+    }
+
+    private static func warn(_ message: String) {
+        FileHandle.standardError.write(Data("trayops: \(message)\n".utf8))
     }
 }

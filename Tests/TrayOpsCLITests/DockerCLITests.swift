@@ -12,21 +12,10 @@ struct DockerCLITests {
         let sandbox = try Sandbox()
         defer { sandbox.destroy() }
 
-        let process = Process()
-        process.executableURL = TestBinary.trayops
-        process.arguments = ["docker", "status"]
-        var environment = ProcessInfo.processInfo.environment
-        environment["HOME"] = sandbox.home
-        process.environment = environment
-        let stdout = Pipe()
-        process.standardOutput = stdout
-        process.standardError = Pipe()
+        let result = try CLIHarness.run(["docker", "status"], extraEnvironment: ["HOME": sandbox.home])
 
-        try process.run()
-        process.waitUntilExit()
-
-        #expect(process.terminationStatus == 0)
-        let output = String(decoding: stdout.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self).lowercased()
+        #expect(result.code == 0)
+        let output = result.stdout.lowercased()
         #expect(["online", "offline", "transitioning", "unavailable"].contains { output.contains($0) })
     }
 }

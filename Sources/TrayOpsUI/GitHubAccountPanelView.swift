@@ -7,6 +7,7 @@ public struct GitHubAccountContentView: View {
     let state: GitHubAccountState
     let accounts: [AccountDTO]
     @Binding var selectedID: UUID?
+    let errorMessage: String?
     let onSet: () -> Void
     let onReconcile: () -> Void
 
@@ -14,12 +15,14 @@ public struct GitHubAccountContentView: View {
         state: GitHubAccountState,
         accounts: [AccountDTO],
         selectedID: Binding<UUID?>,
+        errorMessage: String? = nil,
         onSet: @escaping () -> Void,
         onReconcile: @escaping () -> Void
     ) {
         self.state = state
         self.accounts = accounts
         self._selectedID = selectedID
+        self.errorMessage = errorMessage
         self.onSet = onSet
         self.onReconcile = onReconcile
     }
@@ -44,6 +47,12 @@ public struct GitHubAccountContentView: View {
                 Button("Set", action: onSet)
                 Button("Reconcile", action: onReconcile)
             }
+
+            if let errorMessage {
+                Text(errorMessage)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
         }
     }
 }
@@ -56,6 +65,7 @@ public struct GitHubAccountPanelView: View {
     private let stateStore: StateStore
     @State private var accounts: [AccountDTO] = []
     @State private var selectedID: UUID?
+    @State private var errorMessage: String?
 
     public init(mediator: Mediator, stateStore: StateStore) {
         self.mediator = mediator
@@ -65,11 +75,12 @@ public struct GitHubAccountPanelView: View {
     private enum ActionKind { case apply, reconcile }
 
     public var body: some View {
-        let state = (stateStore.snapshot(for: "github-account") as? GitHubAccountState) ?? .unknown
+        let state = (stateStore.snapshot(for: FeatureID.gitHubAccount) as? GitHubAccountState) ?? .unknown
         return GitHubAccountContentView(
             state: state,
             accounts: accounts,
             selectedID: $selectedID,
+            errorMessage: errorMessage,
             onSet: { dispatch(.apply) },
             onReconcile: { dispatch(.reconcile) }
         )
@@ -85,9 +96,15 @@ public struct GitHubAccountPanelView: View {
     private func dispatch(_ kind: ActionKind) {
         guard let id = selectedID else { return }
         Task {
-            switch kind {
-            case .apply: _ = try? await mediator.send(ApplyAccount(id: id))
-            case .reconcile: _ = try? await mediator.send(ReconcileAccount(id: id))
+            do {
+                let result: ApplyResultDTO
+                switch kind {
+                case .apply: result = try await mediator.send(ApplyAccount(id: id))
+                case .reconcile: result = try await mediator.send(ReconcileAccount(id: id))
+                }
+                errorMessage = result.success ? nil : (result.message ?? "Operation failed")
+            } catch {
+                errorMessage = "\(error)"
             }
             _ = try? await mediator.send(RefreshAll())
         }

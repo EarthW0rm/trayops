@@ -7,6 +7,7 @@ import TrayOpsCore
 /// Contains no business logic — it only reads state and dispatches requests.
 public struct RootPanelView: View {
     private let composition: AppComposition
+    @State private var reconcileMessage: String?
 
     public init(composition: AppComposition) {
         self.composition = composition
@@ -25,8 +26,11 @@ public struct RootPanelView: View {
                     featureView(for: feature)
                     Divider()
                 }
-                Button("Reconcile All") {
-                    Task { _ = try? await composition.mediator.send(ReconcileAll()) }
+                Button("Reconcile All", action: reconcileAll)
+                if let reconcileMessage {
+                    Text(reconcileMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
                 }
             }
 
@@ -38,14 +42,28 @@ public struct RootPanelView: View {
         .frame(width: 300)
     }
 
+    private func reconcileAll() {
+        Task {
+            do {
+                let report = try await composition.mediator.send(ReconcileAll())
+                let failures = report.entries.filter { !$0.success }
+                reconcileMessage = failures.isEmpty
+                    ? nil
+                    : "Failed: " + failures.map(\.featureID).joined(separator: ", ")
+            } catch {
+                reconcileMessage = "\(error)"
+            }
+        }
+    }
+
     /// Resolves the view for a Feature. Adding a Feature adds a case here (a GUI
     /// concern); the core, Mediator and poller are untouched (RN-P-07).
     @ViewBuilder
     private func featureView(for feature: any Feature) -> some View {
         switch feature.id {
-        case "github-account":
+        case FeatureID.gitHubAccount:
             GitHubAccountPanelView(mediator: composition.mediator, stateStore: composition.stateStore)
-        case "docker":
+        case FeatureID.docker:
             DockerPanelView(mediator: composition.mediator, stateStore: composition.stateStore)
         default:
             HStack {

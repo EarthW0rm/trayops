@@ -69,4 +69,23 @@ struct SSHConfigRewriterTests {
     func nilWhenHostMissing() {
         #expect(SSHConfigRewriter.activeIdentityFile(host: host, in: "Host example.com\n") == nil)
     }
+
+    @Test("normalizes across duplicate host blocks to exactly one active")
+    func normalizesAcrossDuplicateHostBlocks() {
+        let existing = "Host github.com\n    IdentityFile ~/.ssh/id_a\n\nHost github.com\n    IdentityFile ~/.ssh/id_b\n"
+
+        let output = SSHConfigRewriter.activate(path: "~/.ssh/id_a", host: host, in: existing)
+
+        #expect(SSHConfigRewriter.activeIdentityFile(host: host, in: output) == "~/.ssh/id_a")
+        #expect(output.contains("# IdentityFile ~/.ssh/id_b"))
+        // Exactly one uncommented IdentityFile remains for the host.
+        let activeCount = output
+            .components(separatedBy: "\n")
+            .filter { line in
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                return trimmed.hasPrefix("IdentityFile")
+            }
+            .count
+        #expect(activeCount == 1)
+    }
 }

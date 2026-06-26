@@ -115,6 +115,27 @@ struct PlatformFlowTests {
         #expect(store.snapshot(for: "plain") != nil)
     }
 
+    @Test("RefreshAll isolates a failing Function — others still update (RN-P-08)")
+    func refreshAllIsolatesFailure() async throws {
+        let runner = FakeProcessRunner()
+        runner.stub(tool: "docker", args: ["info"], exitCode: 0)
+        // git absent ⇒ GitHub refresh resolves to .unavailable; docker stays online.
+        let test = try TestComposition(
+            processRunner: runner,
+            binaryLocator: StubBinaryLocator(["docker": "/bin/docker"])
+        )
+
+        try await test.mediator.send(RefreshAll())
+
+        #expect(test.composition.stateStore.snapshot(for: FeatureID.docker) as? DockerState == .online)
+        let gitHub = test.composition.stateStore.snapshot(for: FeatureID.gitHubAccount) as? GitHubAccountState
+        if case .unavailable = gitHub {
+            // expected — its failure did not stop Docker from publishing.
+        } else {
+            Issue.record("expected GitHub .unavailable, got \(String(describing: gitHub))")
+        }
+    }
+
     @Test("ReconcileAll reconciles the real GitHub Function")
     func reconcileAllOverComposition() async throws {
         let test = try TestComposition()

@@ -46,7 +46,9 @@ public struct DefaultGitConfigService: GitConfigService {
     }
 
     private var environment: [String: String]? {
-        gitConfigGlobalPath.map { ["GIT_CONFIG_GLOBAL": $0] }
+        // When a sandbox global config is set (tests), also ignore the system
+        // config so the result is deterministic regardless of /etc/gitconfig.
+        gitConfigGlobalPath.map { ["GIT_CONFIG_GLOBAL": $0, "GIT_CONFIG_NOSYSTEM": "1"] }
     }
 
     private func readKey(_ key: String) async throws -> String? {

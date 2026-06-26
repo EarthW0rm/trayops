@@ -4,7 +4,7 @@ import Foundation
 /// has no persisted desired state). Adding it required only registering it in the
 /// Composition Root (RN-P-07).
 public final class DockerFeature: Feature {
-    public let id = "docker"
+    public let id = FeatureID.docker
     public let title = "Docker"
     public let systemImage = "shippingbox"
 

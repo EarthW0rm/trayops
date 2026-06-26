@@ -49,7 +49,7 @@ public struct DockerPanelView: View {
     }
 
     public var body: some View {
-        let state = (stateStore.snapshot(for: "docker") as? DockerState) ?? .unavailable(reason: "unknown")
+        let state = (stateStore.snapshot(for: FeatureID.docker) as? DockerState) ?? .unavailable(reason: "unknown")
         return DockerContentView(
             state: state,
             onStart: { dispatch(DockerStart()) },

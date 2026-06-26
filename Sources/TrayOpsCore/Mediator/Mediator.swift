@@ -4,6 +4,9 @@ import Foundation
 public enum MediatorError: Error, Equatable {
     /// No handler was registered for the dispatched request type.
     case noHandler(String)
+    /// A handler was found but its output type did not match the request's
+    /// (a registration bug, not a missing handler).
+    case outputTypeMismatch(String)
 }
 
 /// Command bus: frontends `send` a ``Request`` and receive its `Output`.
@@ -38,7 +41,7 @@ public final class DefaultMediator: Mediator {
         }
         let result = try await handler(request)
         guard let output = result as? R.Output else {
-            throw MediatorError.noHandler(String(describing: R.self))
+            throw MediatorError.outputTypeMismatch(String(describing: R.self))
         }
         return output
     }

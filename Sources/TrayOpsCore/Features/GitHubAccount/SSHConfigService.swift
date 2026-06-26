@@ -8,52 +8,64 @@ public protocol SSHConfigService {
     func activateIdentity(path: String, host: String) async throws
 }
 
+public enum SSHConfigError: Error, Equatable {
+    /// `path`/`host` contained a newline or carriage return (config injection).
+    case invalidValue(String)
+}
+
 /// Pure, IO-free transformer for `~/.ssh/config`. Keeps the parsing/normalization
 /// fully unit-testable; the service wraps it with atomic file IO.
 public enum SSHConfigRewriter {
-    /// Returns the single active (uncommented) `IdentityFile` of the host block.
+    /// Returns the single active (uncommented) `IdentityFile` across every block
+    /// that matches the host.
     public static func activeIdentityFile(host: String, in content: String) -> String? {
         let lines = content.components(separatedBy: "\n")
-        guard let start = lines.firstIndex(where: { isHostLine($0) && hostPatterns($0).contains(host) }) else {
-            return nil
-        }
-        let end = blockEnd(after: start, in: lines)
-        for index in (start + 1)..<end {
-            if let parsed = parseIdentityFile(lines[index]), !parsed.commented {
-                return parsed.value
+        for block in hostBlocks(matching: host, in: lines) {
+            for index in (block.start + 1)..<block.end {
+                if let parsed = parseIdentityFile(lines[index]), !parsed.commented {
+                    return parsed.value
+                }
             }
         }
         return nil
     }
 
-    /// Ensures `path` is the only active `IdentityFile` of the host block,
-    /// commenting the others and preserving every unrelated line. Creates the
-    /// host block (or the whole file) when missing. Deterministic ⇒ idempotent.
+    /// Ensures `path` is the only active `IdentityFile` for the host, commenting
+    /// every other `IdentityFile` in **all** matching blocks and preserving every
+    /// unrelated line. Creates the host block (or the whole file) when missing.
+    /// Deterministic ⇒ idempotent.
     public static func activate(path: String, host: String, in content: String) -> String {
         var lines = content.isEmpty ? [] : content.components(separatedBy: "\n")
 
-        guard let start = lines.firstIndex(where: { isHostLine($0) && hostPatterns($0).contains(host) }) else {
+        let blocks = hostBlocks(matching: host, in: lines)
+        guard let first = blocks.first else {
             return appendBlock(path: path, host: host, to: content)
         }
 
-        let end = blockEnd(after: start, in: lines)
-        let indent = lines[(start + 1)..<end]
-            .compactMap { parseIdentityFile($0) != nil ? leadingWhitespace($0) : nil }
+        let indent = blocks
+            .flatMap { ($0.start + 1)..<$0.end }
+            .compactMap { parseIdentityFile(lines[$0]) != nil ? leadingWhitespace(lines[$0]) : nil }
             .first ?? "    "
 
-        var activeAssigned = false
-        for index in (start + 1)..<end {
-            guard let parsed = parseIdentityFile(lines[index]) else { continue }
-            if parsed.value == path, !activeAssigned {
-                lines[index] = "\(indent)IdentityFile \(path)"
-                activeAssigned = true
-            } else {
-                lines[index] = "\(indent)# IdentityFile \(parsed.value)"
+        // Comment out every IdentityFile in every matching block.
+        for block in blocks {
+            for index in (block.start + 1)..<block.end where parseIdentityFile(lines[index]) != nil {
+                let value = parseIdentityFile(lines[index])!.value
+                lines[index] = "\(indent)# IdentityFile \(value)"
             }
         }
 
-        if !activeAssigned {
-            lines.insert("\(indent)IdentityFile \(path)", at: start + 1)
+        // Activate `path` in the first matching block (reuse an existing line or insert).
+        var activated = false
+        for index in (first.start + 1)..<first.end {
+            if let parsed = parseIdentityFile(lines[index]), parsed.value == path {
+                lines[index] = "\(indent)IdentityFile \(path)"
+                activated = true
+                break
+            }
+        }
+        if !activated {
+            lines.insert("\(indent)IdentityFile \(path)", at: first.start + 1)
         }
 
         return lines.joined(separator: "\n")
@@ -61,9 +73,23 @@ public enum SSHConfigRewriter {
 
     // MARK: - Parsing helpers
 
+    private static func hostBlocks(matching host: String, in lines: [String]) -> [(start: Int, end: Int)] {
+        var blocks: [(start: Int, end: Int)] = []
+        var index = 0
+        while index < lines.count {
+            if isHostLine(lines[index]), hostPatterns(lines[index]).contains(host) {
+                let end = blockEnd(after: index, in: lines)
+                blocks.append((index, end))
+                index = end
+            } else {
+                index += 1
+            }
+        }
+        return blocks
+    }
+
     private static func blockEnd(after start: Int, in lines: [String]) -> Int {
-        let rest = (start + 1)..<lines.count
-        for index in rest where isHostLine(lines[index]) {
+        for index in (start + 1)..<lines.count where isHostLine(lines[index]) {
             return index
         }
         return lines.count
@@ -116,16 +142,27 @@ public struct DefaultSSHConfigService: SSHConfigService {
     }
 
     public func activeIdentityFile(host: String) async throws -> String? {
-        SSHConfigRewriter.activeIdentityFile(host: host, in: readConfig())
+        SSHConfigRewriter.activeIdentityFile(host: host, in: try readConfig())
     }
 
     public func activateIdentity(path: String, host: String) async throws {
-        let updated = SSHConfigRewriter.activate(path: path, host: host, in: readConfig())
+        try reject(newlinesIn: path)
+        try reject(newlinesIn: host)
+        let updated = SSHConfigRewriter.activate(path: path, host: host, in: try readConfig())
         try writeAtomic(updated)
     }
 
-    private func readConfig() -> String {
-        (try? String(contentsOfFile: configPath, encoding: .utf8)) ?? ""
+    private func reject(newlinesIn value: String) throws {
+        if value.contains("\n") || value.contains("\r") {
+            throw SSHConfigError.invalidValue(value)
+        }
+    }
+
+    /// Returns "" only when the file is genuinely absent; a present-but-unreadable
+    /// file throws instead of being silently overwritten (RN-GH-07).
+    private func readConfig() throws -> String {
+        guard FileManager.default.fileExists(atPath: configPath) else { return "" }
+        return try String(contentsOfFile: configPath, encoding: .utf8)
     }
 
     private func writeAtomic(_ content: String) throws {

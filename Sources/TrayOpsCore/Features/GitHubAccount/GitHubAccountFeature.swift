@@ -4,7 +4,7 @@ import Foundation
 /// `refresh()` resolves the state, `reconcile()` reapplies the target account,
 /// and `registerHandlers` wires the use cases (RN-P-01/07, RN-GH-10).
 public final class GitHubAccountFeature: Feature, Reconcilable {
-    public let id = "github-account"
+    public let id = FeatureID.gitHubAccount
     public let title = "GitHub Account"
     public let systemImage = "person.crop.circle"
 
