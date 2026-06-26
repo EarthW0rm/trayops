@@ -46,10 +46,12 @@ public enum SSHConfigRewriter {
         // Prefer the indentation of an existing IdentityFile; otherwise inherit the
         // real indentation (tab vs spaces) of the first indented line in the block,
         // falling back to four spaces only when the block has no indented line.
-        let identityIndent = indices
+        let identityIndent =
+            indices
             .first { parseIdentityFile(lines[$0]) != nil }
             .map { leadingWhitespace(lines[$0]) }
-        let blockIndent = indices
+        let blockIndent =
+            indices
             .first { !leadingWhitespace(lines[$0]).isEmpty }
             .map { leadingWhitespace(lines[$0]) }
         let indent = identityIndent ?? blockIndent ?? "    "
@@ -85,7 +87,8 @@ public enum SSHConfigRewriter {
         var index = 0
         while index < lines.count {
             if isHostLine(lines[index]),
-               hostPatterns(lines[index]).contains(where: { matchesHost(pattern: $0, host: host) }) {
+                hostPatterns(lines[index]).contains(where: { matchesHost(pattern: $0, host: host) })
+            {
                 let end = blockEnd(after: index, in: lines)
                 blocks.append((index, end))
                 index = end
@@ -214,11 +217,13 @@ public struct DefaultSSHConfigService: SSHConfigService {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
         let tempURL = directory.appendingPathComponent(".\(url.lastPathComponent).\(UUID().uuidString).tmp")
-        guard FileManager.default.createFile(
-            atPath: tempURL.path,
-            contents: Data(content.utf8),
-            attributes: [.posixPermissions: 0o600]
-        ) else {
+        guard
+            FileManager.default.createFile(
+                atPath: tempURL.path,
+                contents: Data(content.utf8),
+                attributes: [.posixPermissions: 0o600]
+            )
+        else {
             throw CocoaError(.fileWriteUnknown)
         }
         // Defensive: re-assert 0600 in case the umask widened createFile's attributes.

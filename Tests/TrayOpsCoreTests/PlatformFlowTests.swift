@@ -63,7 +63,9 @@ private final class ReconcilableSpy: Feature, Reconcilable {
 struct PlatformFlowTests {
     @Test("RefreshAll publishes every Function's state")
     func refreshAllPublishesAll() async throws {
-        let registry = FeatureRegistry(features: [SpyFeature(id: "a", stateValue: "a"), SpyFeature(id: "b", stateValue: "b")])
+        let registry = FeatureRegistry(features: [
+            SpyFeature(id: "a", stateValue: "a"), SpyFeature(id: "b", stateValue: "b"),
+        ])
         let store = StateStore()
         let mediator = DefaultMediator()
         mediator.register(RefreshAllHandler(registry: registry, stateStore: store))
@@ -137,9 +139,10 @@ struct PlatformFlowTests {
     @Test("ReconcileAll reconciles the real GitHub Function")
     func reconcileAllOverComposition() async throws {
         let test = try TestComposition()
-        let account = try await test.mediator.send(AddAccount(
-            label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id_personal"
-        ))
+        let account = try await test.mediator.send(
+            AddAccount(
+                label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id_personal"
+            ))
         _ = try await test.mediator.send(ApplyAccount(id: account.id))
 
         let report = try await test.mediator.send(ReconcileAll())

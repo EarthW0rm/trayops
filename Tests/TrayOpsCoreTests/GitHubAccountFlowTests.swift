@@ -9,9 +9,10 @@ struct GitHubAccountFlowTests {
     @Test("Set makes the state consistent")
     func setMakesConsistent() async throws {
         let test = try TestComposition()
-        let account = try await test.mediator.send(AddAccount(
-            label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id_personal"
-        ))
+        let account = try await test.mediator.send(
+            AddAccount(
+                label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id_personal"
+            ))
 
         let result = try await test.mediator.send(ApplyAccount(id: account.id))
         #expect(result.success)
@@ -23,12 +24,14 @@ struct GitHubAccountFlowTests {
     @Test("divergent git/ssh signals are inconsistent")
     func divergentSignalsAreInconsistent() async throws {
         let test = try TestComposition()
-        let accountA = try await test.mediator.send(AddAccount(
-            label: "a", gitName: "name-a", gitEmail: "a@example.com", identityFile: "~/.ssh/id_a"
-        ))
-        let accountB = try await test.mediator.send(AddAccount(
-            label: "b", gitName: "name-b", gitEmail: "b@example.com", identityFile: "~/.ssh/id_b"
-        ))
+        let accountA = try await test.mediator.send(
+            AddAccount(
+                label: "a", gitName: "name-a", gitEmail: "a@example.com", identityFile: "~/.ssh/id_a"
+            ))
+        let accountB = try await test.mediator.send(
+            AddAccount(
+                label: "b", gitName: "name-b", gitEmail: "b@example.com", identityFile: "~/.ssh/id_b"
+            ))
 
         _ = try await test.mediator.send(ApplyAccount(id: accountA.id))
 
@@ -43,12 +46,14 @@ struct GitHubAccountFlowTests {
     @Test("Reconcile realigns to the target account")
     func reconcileRealigns() async throws {
         let test = try TestComposition()
-        let accountA = try await test.mediator.send(AddAccount(
-            label: "a", gitName: "name-a", gitEmail: "a@example.com", identityFile: "~/.ssh/id_a"
-        ))
-        _ = try await test.mediator.send(AddAccount(
-            label: "b", gitName: "name-b", gitEmail: "b@example.com", identityFile: "~/.ssh/id_b"
-        ))
+        let accountA = try await test.mediator.send(
+            AddAccount(
+                label: "a", gitName: "name-a", gitEmail: "a@example.com", identityFile: "~/.ssh/id_a"
+            ))
+        _ = try await test.mediator.send(
+            AddAccount(
+                label: "b", gitName: "name-b", gitEmail: "b@example.com", identityFile: "~/.ssh/id_b"
+            ))
         _ = try await test.mediator.send(ApplyAccount(id: accountA.id))
 
         // Break ssh, then reconcile (no id ⇒ last applied target = A).
@@ -69,7 +74,7 @@ struct GitHubAccountFlowTests {
 
         let git = DefaultGitConfigService(
             runner: FoundationProcessRunner(),
-            locator: StubBinaryLocator([:]),   // git absent ⇒ setIdentity throws
+            locator: StubBinaryLocator([:]),  // git absent ⇒ setIdentity throws
             gitConfigGlobalPath: sandbox.gitConfigGlobalPath
         )
         let ssh = DefaultSSHConfigService(configPath: sandbox.sshConfigPath)
@@ -107,13 +112,16 @@ struct GitHubAccountFlowTests {
     @Test("UpdateAccount persists the new field values")
     func updateAccountPersists() async throws {
         let test = try TestComposition()
-        let created = try await test.mediator.send(AddAccount(
-            label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"
-        ))
+        let created = try await test.mediator.send(
+            AddAccount(
+                label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"
+            ))
 
-        let updated = try await test.mediator.send(UpdateAccount(
-            id: created.id, label: "personal", gitName: "octocat-2", gitEmail: "octo2@example.com", identityFile: "~/.ssh/id2"
-        ))
+        let updated = try await test.mediator.send(
+            UpdateAccount(
+                id: created.id, label: "personal", gitName: "octocat-2", gitEmail: "octo2@example.com",
+                identityFile: "~/.ssh/id2"
+            ))
         #expect(updated.gitName == "octocat-2")
 
         let reloaded = try await test.mediator.send(ListAccounts()).first { $0.id == created.id }
@@ -126,12 +134,14 @@ struct GitHubAccountFlowTests {
         let test = try TestComposition()
 
         await #expect(throws: Error.self) {
-            _ = try await test.mediator.send(AddAccount(label: "", gitName: "n", gitEmail: "e@e.com", identityFile: "~/.ssh/id"))
+            _ = try await test.mediator.send(
+                AddAccount(label: "", gitName: "n", gitEmail: "e@e.com", identityFile: "~/.ssh/id"))
         }
 
-        let account = try await test.mediator.send(AddAccount(
-            label: "temp", gitName: "n", gitEmail: "e@example.com", identityFile: "~/.ssh/id"
-        ))
+        let account = try await test.mediator.send(
+            AddAccount(
+                label: "temp", gitName: "n", gitEmail: "e@example.com", identityFile: "~/.ssh/id"
+            ))
         #expect(try await test.mediator.send(ListAccounts()).contains { $0.id == account.id })
 
         try await test.mediator.send(RemoveAccount(id: account.id))

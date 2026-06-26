@@ -13,7 +13,8 @@ struct DockerCommand: AsyncParsableCommand {
 
 extension DockerCommand {
     struct Status: AsyncParsableCommand {
-        static let configuration = CommandConfiguration(commandName: "status", abstract: "Show whether Docker is online or offline.")
+        static let configuration = CommandConfiguration(
+            commandName: "status", abstract: "Show whether Docker is online or offline.")
         func run() async throws {
             let state = try await CLIRuntime.mediator.send(ResolveDockerState())
             print(state.summary)
@@ -29,7 +30,8 @@ extension DockerCommand {
     }
 
     struct Shutdown: AsyncParsableCommand {
-        static let configuration = CommandConfiguration(commandName: "shutdown", abstract: "Shut down the Docker engine.")
+        static let configuration = CommandConfiguration(
+            commandName: "shutdown", abstract: "Shut down the Docker engine.")
         func run() async throws {
             try await CLIRuntime.mediator.send(DockerShutdown())
             print("Shutting down Docker…")

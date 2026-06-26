@@ -95,7 +95,8 @@ public struct DefaultGitConfigService: GitConfigService {
     }
 
     private func unsetKey(_ key: String) async throws {
-        let output = try await runner.run(try gitPath(), ["config", "--global", "--unset", key], environment: environment)
+        let output = try await runner.run(
+            try gitPath(), ["config", "--global", "--unset", key], environment: environment)
         // git exits 5 when the key being unset does not exist; tolerate it so
         // the rollback stays idempotent.
         guard output.exitCode == 0 || output.exitCode == 5 else {

@@ -46,7 +46,9 @@ public struct FoundationProcessRunner: ProcessRunner {
         self.timeout = timeout
     }
 
-    public func run(_ executable: String, _ args: [String], environment: [String: String]?) async throws -> ProcessOutput {
+    public func run(
+        _ executable: String, _ args: [String], environment: [String: String]?
+    ) async throws -> ProcessOutput {
         let command = ([executable] + args).joined(separator: " ")
 
         let process = Process()
@@ -100,7 +102,7 @@ public struct FoundationProcessRunner: ProcessRunner {
     private func timedOut(_ process: Process, deadline: Date) async -> Bool {
         while process.isRunning {
             if Date() >= deadline { return true }
-            try? await Task.sleep(nanoseconds: 20_000_000) // 20ms
+            try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms
         }
         return false
     }

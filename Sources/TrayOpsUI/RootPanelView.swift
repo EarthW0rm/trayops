@@ -51,7 +51,8 @@ public struct RootPanelView: View {
             do {
                 let report = try await composition.mediator.send(ReconcileAll())
                 let failures = report.entries.filter { !$0.success }
-                reconcileMessage = failures.isEmpty
+                reconcileMessage =
+                    failures.isEmpty
                     ? nil
                     : "Failed: " + failures.map(\.featureID).joined(separator: ", ")
             } catch {

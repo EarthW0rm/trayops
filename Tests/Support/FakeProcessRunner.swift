@@ -56,7 +56,9 @@ public final class FakeProcessRunner: ProcessRunner {
         state.withLock { $0.invocations }
     }
 
-    public func run(_ executable: String, _ args: [String], environment: [String: String]?) async throws -> ProcessOutput {
+    public func run(
+        _ executable: String, _ args: [String], environment: [String: String]?
+    ) async throws -> ProcessOutput {
         try state.withLock { state in
             let tool = (executable as NSString).lastPathComponent
             state.invocations.append(Invocation(executable: executable, args: args))

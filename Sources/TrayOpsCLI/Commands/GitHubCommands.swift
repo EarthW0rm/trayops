@@ -15,7 +15,8 @@ struct GitHubCommand: AsyncParsableCommand {
 
 extension GitHubCommand {
     struct Status: AsyncParsableCommand {
-        static let configuration = CommandConfiguration(commandName: "status", abstract: "Show the active account state.")
+        static let configuration = CommandConfiguration(
+            commandName: "status", abstract: "Show the active account state.")
         func run() async throws {
             let state = try await CLIRuntime.mediator.send(ResolveGitHubState())
             print(state.summary)
@@ -37,7 +38,8 @@ extension GitHubCommand {
     }
 
     struct Set: AsyncParsableCommand {
-        static let configuration = CommandConfiguration(commandName: "set", abstract: "Apply (Set) an account by label.")
+        static let configuration = CommandConfiguration(
+            commandName: "set", abstract: "Apply (Set) an account by label.")
         @Argument(help: "Account label.") var label: String
 
         func run() async throws {
@@ -49,7 +51,8 @@ extension GitHubCommand {
     }
 
     struct Reconcile: AsyncParsableCommand {
-        static let configuration = CommandConfiguration(commandName: "reconcile", abstract: "Reconcile an account (defaults to the last applied).")
+        static let configuration = CommandConfiguration(
+            commandName: "reconcile", abstract: "Reconcile an account (defaults to the last applied).")
         @Argument(help: "Account label (optional).") var label: String?
 
         func run() async throws {
@@ -78,9 +81,10 @@ extension GitHubCommand {
             @Option(name: .customLong("identity-file"), help: "SSH IdentityFile path.") var identityFile: String
 
             func run() async throws {
-                let dto = try await CLIRuntime.mediator.send(AddAccount(
-                    label: label, gitName: gitName, gitEmail: gitEmail, identityFile: identityFile
-                ))
+                let dto = try await CLIRuntime.mediator.send(
+                    AddAccount(
+                        label: label, gitName: gitName, gitEmail: gitEmail, identityFile: identityFile
+                    ))
                 print("Added account: \(dto.label)")
             }
         }
@@ -94,15 +98,17 @@ extension GitHubCommand {
 
             func run() async throws {
                 let account = try await CLIErrors.account(labeled: label)
-                let dto = try await CLIRuntime.mediator.send(UpdateAccount(
-                    id: account.id, label: label, gitName: gitName, gitEmail: gitEmail, identityFile: identityFile
-                ))
+                let dto = try await CLIRuntime.mediator.send(
+                    UpdateAccount(
+                        id: account.id, label: label, gitName: gitName, gitEmail: gitEmail, identityFile: identityFile
+                    ))
                 print("Updated account: \(dto.label)")
             }
         }
 
         struct Remove: AsyncParsableCommand {
-            static let configuration = CommandConfiguration(commandName: "remove", abstract: "Remove an account by label.")
+            static let configuration = CommandConfiguration(
+                commandName: "remove", abstract: "Remove an account by label.")
             @Argument(help: "Label of the account to remove.") var label: String
 
             func run() async throws {

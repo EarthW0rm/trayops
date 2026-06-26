@@ -51,7 +51,8 @@ struct GitConfigServiceTests {
         runner.stub(tool: "git", args: ["config", "--global", "user.name"], exitCode: 0, stdout: "previous-octocat\n")
         runner.stub(tool: "git", args: ["config", "--global", "user.name", "octocat"], exitCode: 0)
         // The email write fails, which must trigger the rollback.
-        runner.stub(tool: "git", args: ["config", "--global", "user.email", "octo@example.com"], exitCode: 1, stderr: "boom")
+        runner.stub(
+            tool: "git", args: ["config", "--global", "user.email", "octo@example.com"], exitCode: 1, stderr: "boom")
         // Rollback restores the previously snapshotted name.
         runner.stub(tool: "git", args: ["config", "--global", "user.name", "previous-octocat"], exitCode: 0)
 
@@ -80,7 +81,8 @@ struct GitConfigServiceTests {
         // No previous name: git exits 1 with empty stderr (unset).
         runner.stub(tool: "git", args: ["config", "--global", "user.name"], exitCode: 1)
         runner.stub(tool: "git", args: ["config", "--global", "user.name", "octocat"], exitCode: 0)
-        runner.stub(tool: "git", args: ["config", "--global", "user.email", "octo@example.com"], exitCode: 1, stderr: "boom")
+        runner.stub(
+            tool: "git", args: ["config", "--global", "user.email", "octo@example.com"], exitCode: 1, stderr: "boom")
         runner.stub(tool: "git", args: ["config", "--global", "--unset", "user.name"], exitCode: 0)
 
         let service = DefaultGitConfigService(

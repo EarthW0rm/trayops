@@ -29,7 +29,8 @@ struct DockerUITests {
 
     @Test("unavailable shows the reason and no action button")
     func unavailableShowsReason() throws {
-        let view = DockerContentView(state: .unavailable(reason: "docker binary not found"), onStart: {}, onShutdown: {})
+        let view = DockerContentView(
+            state: .unavailable(reason: "docker binary not found"), onStart: {}, onShutdown: {})
 
         _ = try view.inspect().find(text: "Unavailable: docker binary not found")
         #expect(throws: Error.self) {

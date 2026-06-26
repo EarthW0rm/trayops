@@ -13,7 +13,7 @@ struct TrayOpsApp: App {
         NSApplication.shared.setActivationPolicy(.accessory)
         do {
             let composition = try AppComposition.live()
-            composition.poller.start()   // periodic state refresh (RN-P-02)
+            composition.poller.start()  // periodic state refresh (RN-P-02)
             _composition = State(initialValue: composition)
         } catch {
             fatalError("TrayOps failed to initialize: \(error)")

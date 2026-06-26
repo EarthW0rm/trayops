@@ -56,7 +56,8 @@ struct SSHConfigRewriterTests {
 
     @Test("preserves unrelated hosts")
     func preservesUnrelatedHosts() {
-        let existing = "Host example.com\n    IdentityFile ~/.ssh/other\n\nHost github.com\n    IdentityFile ~/.ssh/id_a\n"
+        let existing =
+            "Host example.com\n    IdentityFile ~/.ssh/other\n\nHost github.com\n    IdentityFile ~/.ssh/id_a\n"
 
         let output = SSHConfigRewriter.activate(path: "~/.ssh/id_b", host: host, in: existing)
 
@@ -72,14 +73,16 @@ struct SSHConfigRewriterTests {
 
     @Test("normalizes across duplicate host blocks to exactly one active")
     func normalizesAcrossDuplicateHostBlocks() {
-        let existing = "Host github.com\n    IdentityFile ~/.ssh/id_a\n\nHost github.com\n    IdentityFile ~/.ssh/id_b\n"
+        let existing =
+            "Host github.com\n    IdentityFile ~/.ssh/id_a\n\nHost github.com\n    IdentityFile ~/.ssh/id_b\n"
 
         let output = SSHConfigRewriter.activate(path: "~/.ssh/id_a", host: host, in: existing)
 
         #expect(SSHConfigRewriter.activeIdentityFile(host: host, in: output) == "~/.ssh/id_a")
         #expect(output.contains("# IdentityFile ~/.ssh/id_b"))
         // Exactly one uncommented IdentityFile remains for the host.
-        let activeCount = output
+        let activeCount =
+            output
             .components(separatedBy: "\n")
             .filter { line in
                 let trimmed = line.trimmingCharacters(in: .whitespaces)
@@ -91,7 +94,8 @@ struct SSHConfigRewriterTests {
 
     @Test("Match opens a new block — an IdentityFile inside Match is not touched")
     func matchDelimitsBlock() {
-        let existing = "Host github.com\n    IdentityFile ~/.ssh/id_a\nMatch host bitbucket.org\n    IdentityFile ~/.ssh/id_match\n"
+        let existing =
+            "Host github.com\n    IdentityFile ~/.ssh/id_a\nMatch host bitbucket.org\n    IdentityFile ~/.ssh/id_match\n"
 
         let output = SSHConfigRewriter.activate(path: "~/.ssh/id_a", host: host, in: existing)
 

@@ -11,11 +11,11 @@ struct AccountStoreTests {
     private func writeSeedFixture() throws -> URL {
         let url = tempURL()
         let json = """
-        { "accounts": [
-            { "label": "personal", "gitName": "octocat", "gitEmail": "octo@example.com", "identityFile": "~/.ssh/id_personal" },
-            { "label": "work", "gitName": "octocat-work", "gitEmail": "octo@work.example.com", "identityFile": "~/.ssh/id_work" }
-        ] }
-        """
+            { "accounts": [
+                { "label": "personal", "gitName": "octocat", "gitEmail": "octo@example.com", "identityFile": "~/.ssh/id_personal" },
+                { "label": "work", "gitName": "octocat-work", "gitEmail": "octo@work.example.com", "identityFile": "~/.ssh/id_work" }
+            ] }
+            """
         try json.write(to: url, atomically: true, encoding: .utf8)
         return url
     }
@@ -54,7 +54,8 @@ struct AccountStoreTests {
     func persistsAcrossInstances() throws {
         let url = tempURL()
         let first = JSONAccountStore(url: url)
-        try first.add(Account(label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"))
+        try first.add(
+            Account(label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"))
 
         let second = JSONAccountStore(url: url)
         #expect(try second.all().count == 1)
@@ -66,7 +67,8 @@ struct AccountStoreTests {
         let store = JSONAccountStore(url: tempURL())
 
         #expect(throws: AccountStoreError.notFound) {
-            try store.update(Account(label: "ghost", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"))
+            try store.update(
+                Account(label: "ghost", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"))
         }
         #expect(try store.all().isEmpty)
     }
@@ -75,10 +77,15 @@ struct AccountStoreTests {
     func addDuplicateIDThrows() throws {
         let store = JSONAccountStore(url: tempURL())
         let id = UUID()
-        try store.add(Account(id: id, label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"))
+        try store.add(
+            Account(
+                id: id, label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"))
 
         #expect(throws: AccountStoreError.duplicateID) {
-            try store.add(Account(id: id, label: "personal-again", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id2"))
+            try store.add(
+                Account(
+                    id: id, label: "personal-again", gitName: "octocat", gitEmail: "octo@example.com",
+                    identityFile: "~/.ssh/id2"))
         }
         #expect(try store.all().count == 1)
     }
@@ -86,9 +93,18 @@ struct AccountStoreTests {
     @Test("all() returns accounts ordered by sortIndex")
     func allReturnsSortedBySortIndex() throws {
         let store = JSONAccountStore(url: tempURL())
-        try store.add(Account(label: "third", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id3", sortIndex: 2))
-        try store.add(Account(label: "first", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id1", sortIndex: 0))
-        try store.add(Account(label: "second", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id2", sortIndex: 1))
+        try store.add(
+            Account(
+                label: "third", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id3",
+                sortIndex: 2))
+        try store.add(
+            Account(
+                label: "first", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id1",
+                sortIndex: 0))
+        try store.add(
+            Account(
+                label: "second", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id2",
+                sortIndex: 1))
 
         #expect(try store.all().map(\.label) == ["first", "second", "third"])
     }

@@ -8,7 +8,8 @@ import TrayOpsCore
 @MainActor
 struct GitHubAccountUITests {
     private func account() -> AccountDTO {
-        AccountDTO(id: UUID(), label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id")
+        AccountDTO(
+            id: UUID(), label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id")
     }
 
     @Test("renders the consistent state summary")

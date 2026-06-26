@@ -49,7 +49,8 @@ struct DockerServiceTests {
 
     @Test("start throws when rdctl is absent")
     func startThrowsWhenRdctlAbsent() async {
-        let service = DefaultDockerService(runner: FakeProcessRunner(), locator: StubBinaryLocator(["docker": "/bin/docker"]))
+        let service = DefaultDockerService(
+            runner: FakeProcessRunner(), locator: StubBinaryLocator(["docker": "/bin/docker"]))
 
         await #expect(throws: DockerError.self) {
             try await service.start()

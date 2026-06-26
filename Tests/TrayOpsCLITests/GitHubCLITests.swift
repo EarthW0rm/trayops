@@ -12,7 +12,8 @@ struct GitHubCLITests {
         ]
         if seed {
             let seedURL = sandbox.root.appendingPathComponent("seed.json")
-            let json = #"{ "accounts": [ { "label": "personal", "gitName": "octocat", "gitEmail": "octo@example.com", "identityFile": "~/.ssh/id_personal" } ] }"#
+            let json =
+                #"{ "accounts": [ { "label": "personal", "gitName": "octocat", "gitEmail": "octo@example.com", "identityFile": "~/.ssh/id_personal" } ] }"#
             try json.write(to: seedURL, atomically: true, encoding: .utf8)
             environment["TRAYOPS_SEED_PATH"] = seedURL.path
         }
