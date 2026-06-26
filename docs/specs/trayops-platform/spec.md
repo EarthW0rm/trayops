@@ -1,6 +1,9 @@
 # Functional Specification: TrayOps Platform and Initial Functions
 
 > Personal project, for exclusive use on the user's machine. No corporate restrictions apply. **Automated testing is required**, with emphasis on **E2E tests for the UI and CLI** (see §7).
+>
+> **Current (as-built) state:** this file describes the system as *planned*. For the
+> *delivered* system and the deviations from plan, see [`as-built.md`](as-built.md).
 
 ## 1. Overview and Objective
 

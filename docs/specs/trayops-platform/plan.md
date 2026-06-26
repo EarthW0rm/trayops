@@ -1,6 +1,10 @@
 # Technical Planning: TrayOps Platform and Initial Functions
 
 > Prerequisite: `spec.md` approved. Personal macOS project, Swift 6.3 + SPM, **with tests** (emphasis on E2E CLI + UI). Corporate backend stack (web/messaging frameworks) **does not apply**.
+>
+> **Current (as-built) state:** this file describes the architecture as *planned*
+> (SwiftData, 3 targets). For the *delivered* architecture and the deviations (JSON
+> store, 4 targets, logging/timeouts), see [`as-built.md`](as-built.md).
 
 ## 1. Architecture Overview
 

@@ -1,0 +1,32 @@
+@startuml
+!include <C4/C4_Container>
+title TrayOps - C4 Level 2 (Containers) — AS-BUILT
+
+Person(user, "User", "Operates functions via tray or terminal")
+
+System_Boundary(trayops, "TrayOps") {
+    Container(gui, "TrayOpsApp (GUI)", "Swift, SwiftUI MenuBarExtra", "Menu bar frontend; observes StateStore. Product 'TrayOpsApp' (not 'TrayOps') — case-insensitive FS")
+    Container(ui, "TrayOpsUI", "Swift library", "SwiftUI views; importable by the UI E2E tests (ViewInspector cannot import an executable)")
+    Container(cli, "trayops (CLI)", "Swift, swift-argument-parser", "Command-line frontend")
+    Container(core, "TrayOpsCore", "Swift library", "Mediator, Features, StatePoller, use cases, services, Logger")
+    ContainerDb(store, "Local Store", "JSON file (atomic, 0600)", "accounts.json — SwiftData @Model needs Xcode, replaced by a JSON store behind AccountStore")
+    ContainerDb(log, "Log", "Text file", "~/Library/Logs/TrayOps/trayops.log — commands, exit codes, durations, timeouts")
+}
+
+System_Ext(gitcli, "git CLI", "git config --global ...")
+System_Ext(sshcfg, "~/.ssh/config", "SSH Config")
+System_Ext(rd, "Rancher Desktop", "rdctl / docker")
+
+Rel(user, gui, "Clicks, triggers functions")
+Rel(user, cli, "Executes subcommands")
+Rel(gui, ui, "Renders views")
+Rel(ui, core, "send(Request) / observes StateStore", "Mediator + DTOs")
+Rel(cli, core, "send(Request)", "Mediator + DTOs")
+Rel(core, store, "Reads/writes", "JSON, atomic")
+Rel(core, log, "Appends", "FileLogger")
+Rel(core, gitcli, "Executes (timeout-bounded)", "ProcessRunner")
+Rel(core, sshcfg, "Reads/atomically rewrites (0600)", "FileManager")
+Rel(core, rd, "Executes rdctl/docker (timeout-bounded)", "ProcessRunner")
+
+LAYOUT_WITH_LEGEND()
+@enduml
