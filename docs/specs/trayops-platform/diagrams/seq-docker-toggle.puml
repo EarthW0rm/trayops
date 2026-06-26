@@ -1,0 +1,28 @@
+@startuml
+title TrayOps - Docker Control Sequence (toggle)
+
+actor User
+participant "Frontend" as fe
+participant "Mediator" as med
+participant "DockerActionHandler" as h
+participant "DockerService" as d
+participant "ProcessRunner" as r
+participant "StateStore" as ss
+
+User -> fe: Start (offline) / Stop (online)
+fe -> med: send(DockerStart | DockerShutdown)
+med -> h: handle
+h -> d: start() | shutdown()
+d -> r: rdctl start | rdctl shutdown (absolute path)
+alt OK
+    r --> d: exit 0
+    d --> h: ok (transitioning state)
+    h -> ss: publishes "transitioning"
+    h --> med: ok
+else failure
+    r --> d: exit != 0
+    d --> h: error
+    h --> med: error (keeps previous state)
+end
+note over ss: next refresh (<=15s) converges online/offline via `docker info`
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+!include <C4/C4_Container>
+title TrayOps - C4 Level 2 (Containers)
+
+Person(user, "User", "Operates functions via tray or terminal")
+
+System_Boundary(trayops, "TrayOps") {
+    Container(gui, "TrayOps (GUI)", "Swift, SwiftUI MenuBarExtra", "Menu bar frontend; observes StateStore")
+    Container(cli, "trayops (CLI)", "Swift, swift-argument-parser", "Command-line frontend")
+    Container(core, "TrayOpsCore", "Swift library", "Mediator, Features, StatePoller, use cases, services")
+    ContainerDb(store, "Local Store", "SwiftData (SQLite)", "Accounts and preferences")
+}
+
+System_Ext(gitcli, "git CLI", "git config --global ...")
+System_Ext(sshcfg, "~/.ssh/config", "SSH Config")
+System_Ext(rd, "Rancher Desktop", "rdctl / docker")
+
+Rel(user, gui, "Clicks, triggers functions")
+Rel(user, cli, "Executes subcommands")
+Rel(gui, core, "send(Request) / observes StateStore", "Mediator + DTOs")
+Rel(cli, core, "send(Request)", "Mediator + DTOs")
+Rel(core, store, "Reads/writes", "SwiftData")
+Rel(core, gitcli, "Executes", "ProcessRunner")
+Rel(core, sshcfg, "Reads/atomically rewrites", "FileManager")
+Rel(core, rd, "Executes rdctl/docker", "ProcessRunner")
+
+LAYOUT_WITH_LEGEND()
+@enduml

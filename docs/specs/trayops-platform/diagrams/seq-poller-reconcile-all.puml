@@ -1,0 +1,34 @@
+@startuml
+title TrayOps - Periodic update (poller 15s) and Reconcile All
+
+participant "StatePoller" as p
+participant "Mediator" as med
+participant "RefreshAllHandler" as rh
+participant "FeatureRegistry" as reg
+participant "Feature (each)" as f
+participant "StateStore" as ss
+participant "GUI" as gui
+
+== Every 15s ==
+p -> med: send(RefreshAll)
+med -> rh: handle
+rh -> reg: features
+loop for each Feature
+    rh -> f: refresh()
+    alt success
+        f --> rh: snapshot
+    else isolated error (RN-P-08)
+        f --> rh: "unavailable" state
+    end
+    rh -> ss: set(id, snapshot)
+end
+ss --> gui: notifies (Observation) -> re-render
+
+== Reconcile All (on demand) ==
+gui -> med: send(ReconcileAll)
+med -> reg: features Reconcilable
+loop each reconcilable
+    med -> f: reconcile() ; refresh()
+end
+med --> gui: consolidated result (successes/failures)
+@enduml

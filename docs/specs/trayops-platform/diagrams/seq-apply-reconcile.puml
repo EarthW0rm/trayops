@@ -1,0 +1,39 @@
+@startuml
+title TrayOps - Sequence Set / Reconcile (GitHub Account)
+
+actor User
+participant "Frontend\n(GUI/CLI)" as fe
+participant "Mediator" as med
+participant "ApplyAccountHandler" as h
+participant "AccountApplier" as ap
+participant "GitConfigService" as git
+participant "SSHConfigService" as ssh
+participant "StateStore" as ss
+
+User -> fe: Set / Reconcile (target account)
+fe -> med: send(ApplyAccount(id))
+med -> h: handle
+h -> ap: apply(account)
+ap -> git: setIdentity(name, email)
+alt git OK
+    git --> ap: ok
+    ap -> ssh: activateIdentity(path)
+    alt ssh OK
+        ssh --> ap: ok (atomic rewrite)
+        ap --> h: ok
+        h -> ss: publishes consistent state
+        h --> med: ApplyResult(.consistent)
+        med --> fe: Result -> shows "consistent"
+    else ssh fails
+        ssh --> ap: error
+        ap --> h: error
+        h --> med: ApplyResult(.failure(ssh))
+        med --> fe: error (RN-GH-09)
+    end
+else git fails
+    git --> ap: error
+    ap --> h: error (ssh NOT touched)
+    h --> med: ApplyResult(.failure(git))
+    med --> fe: error (RN-GH-09)
+end
+@enduml

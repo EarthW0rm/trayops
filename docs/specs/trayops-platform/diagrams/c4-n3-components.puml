@@ -1,0 +1,53 @@
+@startuml
+!include <C4/C4_Component>
+title TrayOps - C4 Level 3 (TrayOpsCore Components)
+
+System_Ext(fe, "Frontends (GUI/CLI)")
+
+Container_Boundary(core, "TrayOpsCore") {
+    Component(comp, "AppComposition", "Composition Root", "Builds the graph; app and tests use the same factory")
+    Component(mediator, "Mediator", "Command Bus", "send(Request) -> Result")
+    Component(registry, "FeatureRegistry", "Swift", "Features + handler registration")
+    Component(poller, "StatePoller", "Timer 15s", "Triggers RefreshAll")
+    Component(stateStore, "StateStore", "@Observable", "Per-feature snapshots")
+    Component(handlers, "UseCase Handlers", "RequestHandler", "RefreshAll, ReconcileAll, and per feature")
+    Component(ghf, "GitHubAccountFeature", "Feature + Reconcilable", "GitHub Account")
+    Component(dkf, "DockerFeature", "Feature", "Docker Control")
+    Component(applier, "AccountApplier", "Swift", "Single Set/Reconcile sequence")
+    Component(resolver, "AccountStateResolver", "Swift", "git + ssh -> state")
+    Component(gitsvc, "GitConfigService", "protocol + impl", "global user.name/email")
+    Component(sshsvc, "SSHConfigService", "protocol + impl", "Activates one IdentityFile")
+    Component(dksvc, "DockerService", "protocol + impl", "status / start / shutdown")
+    Component(runner, "ProcessRunner", "protocol + impl", "Executes git/rdctl/docker (absolute paths)")
+    Component(storeapi, "AccountStore", "protocol + SwiftData", "CRUD Account <-> AccountDTO")
+}
+
+ComponentDb(db, "SwiftData", "SQLite")
+System_Ext(ext, "git / ~/.ssh/config / rdctl")
+
+Rel(fe, mediator, "send(Request)")
+Rel(fe, stateStore, "observes (GUI)")
+Rel(comp, registry, "Registers features")
+Rel(comp, mediator, "Registers handlers")
+Rel(poller, mediator, "RefreshAll")
+Rel(registry, ghf, "contains")
+Rel(registry, dkf, "contains")
+Rel(mediator, handlers, "Dispatches")
+Rel(handlers, registry, "Iterates features (RefreshAll/ReconcileAll)")
+Rel(handlers, stateStore, "Publishes snapshot")
+Rel(ghf, applier, "apply/reconcile")
+Rel(ghf, resolver, "resolve")
+Rel(ghf, storeapi, "CRUD")
+Rel(dkf, dksvc, "status/start/shutdown")
+Rel(applier, gitsvc, "setIdentity")
+Rel(applier, sshsvc, "activateIdentity")
+Rel(resolver, gitsvc, "read user.name")
+Rel(resolver, sshsvc, "read active IdentityFile")
+Rel(gitsvc, runner, "git config")
+Rel(dksvc, runner, "rdctl/docker")
+Rel(sshsvc, ext, "reads/atomically rewrites")
+Rel(runner, ext, "Executes")
+Rel(storeapi, db, "Reads/writes")
+
+LAYOUT_WITH_LEGEND()
+@enduml
