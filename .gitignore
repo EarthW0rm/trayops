@@ -18,6 +18,15 @@ DerivedData/
 *.xcworkspace/xcuserdata/
 Package.resolved
 
+# Stray compiler artifacts (e.g. from verbose builds writing to the repo root)
+*.d
+*.dia
+*.o
+*.swiftdeps
+
+# Packaged app bundle (built by scripts/build-app.sh)
+dist/
+
 # === Serena (cache and local overrides) ===
 .serena/cache/
 .serena/project.local.yml

@@ -2,14 +2,26 @@
 
 > Prerequisites: `spec.md` and `plan.md` approved. System: `trayops`. Personal project (no PM Epic). Stack: Swift 6.3, SPM, SwiftUI, SwiftData, swift-argument-parser, Swift Testing + ViewInspector. No corporate stack.
 
+## GitHub Tracking
+
+Issues, sub-issues and milestones registered in [`EarthW0rm/trayops`](https://github.com/EarthW0rm/trayops/issues). Pattern: US = parent issue (`type/user-story`), TF = native sub-issue (`type/task`); milestone = release.
+
+| Milestone | Covers | Link |
+|---|---|---|
+| v0.1.0 — Foundation + GitHub Account | US-33, US-34 | [milestone/1](https://github.com/EarthW0rm/trayops/milestone/1) |
+| v0.2.0 — Platform State | US-35 | [milestone/2](https://github.com/EarthW0rm/trayops/milestone/2) |
+| v0.3.0 — Docker Control | US-36 | [milestone/3](https://github.com/EarthW0rm/trayops/milestone/3) |
+
+Labels: `type/{user-story,task}`, `priority/{p0,p1,p2}`, `scope/{build,core,app,service,persistence,domain,usecase,gui,cli,tests}`. GitHub Project (board v2) not created — requires `project` token scope (`gh auth refresh -s project`).
+
 ## User Stories Overview
 
-| US | Title | Deliverable | Depends on |
-|---|---|---|---|
-| US-33 | Platform Foundation | Empty tray app + CLI skeleton running; core (Mediator, Feature, Composition Root) | — |
-| US-34 | GitHub Account Function | Switch/reconcile GitHub account via GUI and CLI | US-33 |
-| US-35 | Periodic State and Reconcile All | Automatic update (15s) + global Reconcile All action | US-33, US-34 |
-| US-36 | Docker Control Function | Start/stop Docker (Rancher) via GUI and CLI | US-33, US-35 |
+| US | Title | Issue | Milestone | Depends on |
+|---|---|---|---|---|
+| US-33 | Platform Foundation | [#1](https://github.com/EarthW0rm/trayops/issues/1) | v0.1.0 | — |
+| US-34 | GitHub Account Function | [#2](https://github.com/EarthW0rm/trayops/issues/2) | v0.1.0 | US-33 |
+| US-35 | Periodic State and Reconcile All | [#3](https://github.com/EarthW0rm/trayops/issues/3) | v0.2.0 | US-33, US-34 |
+| US-36 | Docker Control Function | [#4](https://github.com/EarthW0rm/trayops/issues/4) | v0.3.0 | US-33, US-35 |
 
 Directory conventions (SPM):
 ```
@@ -24,7 +36,7 @@ Tests/TrayOpsUITests/     # E2E interface (ViewInspector)
 
 ---
 
-## [US-33]: TrayOps Platform Foundation
+## [US-33]: TrayOps Platform Foundation · [#1](https://github.com/EarthW0rm/trayops/issues/1)
 
 **System:** trayops · **Estimate:** 5 SP · **Priority:** P0
 
@@ -60,7 +72,7 @@ Foundation of the entire platform: the agnostic core (Mediator, Feature, Composi
 
 ### Tasks
 
-#### TF-33-01: [trayops] SPM package scaffold with 3 targets and dependencies
+#### TF-33-01: [trayops] SPM package scaffold with 3 targets and dependencies · [#5](https://github.com/EarthW0rm/trayops/issues/5)
 **Priority:** P0
 ##### 1. Description and Goal
 > **As a** developer, **I want** the `Package.swift` with the targets structure, **So that** GUI, CLI, and core compile in isolation.
@@ -79,7 +91,7 @@ Foundation of the entire platform: the agnostic core (Mediator, Feature, Composi
 
 ---
 
-#### TF-33-02: [trayops] Mediator Core (command bus)
+#### TF-33-02: [trayops] Mediator Core (command bus) · [#6](https://github.com/EarthW0rm/trayops/issues/6)
 **Priority:** P0
 ##### 1. Description and Goal
 > **As a** core, **I want** a Mediator that dispatches `Request` to handlers, **So that** frontends trigger use cases without knowing them.
@@ -99,7 +111,7 @@ Foundation of the entire platform: the agnostic core (Mediator, Feature, Composi
 
 ---
 
-#### TF-33-03: [trayops] Platform abstractions (Feature, Registry, State)
+#### TF-33-03: [trayops] Platform abstractions (Feature, Registry, State) · [#7](https://github.com/EarthW0rm/trayops/issues/7)
 **Priority:** P0
 ##### 1. Description and Goal
 > **As a** core, **I want** the `Feature`, `Reconcilable`, `FeatureState` protocols and the `FeatureRegistry`, **So that** Functions are pluggable (RN-P-07).
@@ -113,7 +125,7 @@ Foundation of the entire platform: the agnostic core (Mediator, Feature, Composi
 
 ---
 
-#### TF-33-04: [trayops] System boundaries: ProcessRunner and BinaryLocator
+#### TF-33-04: [trayops] System boundaries: ProcessRunner and BinaryLocator · [#8](https://github.com/EarthW0rm/trayops/issues/8)
 **Priority:** P0
 ##### 1. Description and Goal
 > **As a** core, **I want** abstractions to run processes and locate binaries, **So that** git/rdctl/docker are called in a testable manner independent of PATH (RN-DK-03).
@@ -132,7 +144,7 @@ Foundation of the entire platform: the agnostic core (Mediator, Feature, Composi
 
 ---
 
-#### TF-33-05: [trayops] Composition Root + GUI MenuBarExtra + CLI skeleton
+#### TF-33-05: [trayops] Composition Root + GUI MenuBarExtra + CLI skeleton · [#9](https://github.com/EarthW0rm/trayops/issues/9)
 **Priority:** P0
 ##### 1. Description and Goal
 > **As a** platform, **I want** a single factory that assembles the graph and two frontends that consume it, **So that** the app and tests share the same composition (plan §1).
@@ -149,7 +161,7 @@ Foundation of the entire platform: the agnostic core (Mediator, Feature, Composi
 
 ---
 
-#### TF-33-06: [trayops] Test setup (Swift Testing + ViewInspector + sandbox)
+#### TF-33-06: [trayops] Test setup (Swift Testing + ViewInspector + sandbox) · [#10](https://github.com/EarthW0rm/trayops/issues/10)
 **Priority:** P0
 ##### 1. Description and Goal
 > **As a** project, **I want** the test infrastructure and sandbox helpers, **So that** subsequent US have deterministic E2E.
@@ -166,7 +178,7 @@ Foundation of the entire platform: the agnostic core (Mediator, Feature, Composi
 
 ---
 
-## [US-34]: GitHub Account Function
+## [US-34]: GitHub Account Function · [#2](https://github.com/EarthW0rm/trayops/issues/2)
 
 **System:** trayops · **Estimate:** 8 SP · **Priority:** P1 · **Depends on:** US-33
 
@@ -199,7 +211,7 @@ RN-GH-01 through RN-GH-10, RN-P-01, RN-P-05.
 
 ### Tasks
 
-#### TF-34-01: [trayops] Account model, AccountStore (SwiftData), seed and DTO
+#### TF-34-01: [trayops] Account model, AccountStore (SwiftData), seed and DTO · [#11](https://github.com/EarthW0rm/trayops/issues/11)
 **Priority:** P0
 ##### 2. Technical Specification
 - `Sources/TrayOpsCore/Features/GitHubAccount/Account.swift` — `@Model Account` (fields from plan §3.1).
@@ -218,7 +230,7 @@ RN-GH-01 through RN-GH-10, RN-P-01, RN-P-05.
 
 ---
 
-#### TF-34-02: [trayops] GitConfigService
+#### TF-34-02: [trayops] GitConfigService · [#12](https://github.com/EarthW0rm/trayops/issues/12)
 **Priority:** P1
 ##### 2. Technical Specification
 - `.../GitHubAccount/GitConfigService.swift` — protocol (plan §4.3) + impl via `ProcessRunner`/`BinaryLocator` (`git config --global user.name|user.email [value]`).
@@ -232,7 +244,7 @@ RN-GH-01 through RN-GH-10, RN-P-01, RN-P-05.
 
 ---
 
-#### TF-34-03: [trayops] SSHConfigService — idempotent parser/writer
+#### TF-34-03: [trayops] SSHConfigService — idempotent parser/writer · [#13](https://github.com/EarthW0rm/trayops/issues/13)
 **Priority:** P1
 ##### 1. Description and Goal
 > **I want** to activate one `IdentityFile` and comment out the others in the GitHub host, **So that** the correct key is used without corrupting the file.
@@ -250,7 +262,7 @@ RN-GH-01 through RN-GH-10, RN-P-01, RN-P-05.
 
 ---
 
-#### TF-34-04: [trayops] AccountStateResolver and AccountApplier
+#### TF-34-04: [trayops] AccountStateResolver and AccountApplier · [#14](https://github.com/EarthW0rm/trayops/issues/14)
 **Priority:** P1
 ##### 2. Technical Specification
 - `.../GitHubAccount/AccountStateResolver.swift` — correlates `user.name` (git) + active `IdentityFile` (ssh) with accounts → `GitHubAccountState` (consistent/inconsistent/unknown) (RN-GH-03/04).
@@ -261,7 +273,7 @@ RN-GH-01 through RN-GH-10, RN-P-01, RN-P-05.
 
 ---
 
-#### TF-34-05: [trayops] GitHub Account Requests and Handlers
+#### TF-34-05: [trayops] GitHub Account Requests and Handlers · [#15](https://github.com/EarthW0rm/trayops/issues/15)
 **Priority:** P1
 ##### 2. Technical Specification
 - `.../GitHubAccount/Requests.swift` — `ResolveGitHubState`, `ListAccounts`, `ApplyAccount(id)`, `ReconcileAccount(id)`, `AddAccount`, `UpdateAccount`, `RemoveAccount` (outputs in plan §4.2).
@@ -272,7 +284,7 @@ RN-GH-01 through RN-GH-10, RN-P-01, RN-P-05.
 
 ---
 
-#### TF-34-06: [trayops] GitHubAccountFeature + panel view + E2E interface
+#### TF-34-06: [trayops] GitHubAccountFeature + panel view + E2E interface · [#16](https://github.com/EarthW0rm/trayops/issues/16)
 **Priority:** P1
 ##### 2. Technical Specification
 - `.../GitHubAccount/GitHubAccountFeature.swift` (Core) — conforms to `Feature` + `Reconcilable`; `refresh()` → `ResolveGitHubState`; `reconcile()` → re-applies target account; `registerHandlers` registers TF-34-05; `commands()` declares the subcommands.
@@ -286,7 +298,7 @@ Flow per plan §2.3 (Set/Reconcile, success + failure).
 
 ---
 
-#### TF-34-07: [trayops] CLI `github` subcommands + E2E CLI
+#### TF-34-07: [trayops] CLI `github` subcommands + E2E CLI · [#17](https://github.com/EarthW0rm/trayops/issues/17)
 **Priority:** P1
 ##### 2. Technical Specification
 - `Sources/trayops/Commands/GitHubCommands.swift` — `github status|list|set <label>|reconcile [<label>]|account add|edit|remove`. Each subcommand dispatches the equivalent Request (RN-P-05) and maps result → stdout + exit code (RN-P-06).
@@ -297,7 +309,7 @@ Flow per plan §2.3 (Set/Reconcile, success + failure).
 
 ---
 
-## [US-35]: Periodic State and Reconcile All
+## [US-35]: Periodic State and Reconcile All · [#3](https://github.com/EarthW0rm/trayops/issues/3)
 
 **System:** trayops · **Estimate:** 5 SP · **Priority:** P1 · **Depends on:** US-33, US-34
 
@@ -327,7 +339,7 @@ RN-P-01, RN-P-02, RN-P-03, RN-P-08.
 
 ### Tasks
 
-#### TF-35-01: [trayops] Observable StateStore
+#### TF-35-01: [trayops] Observable StateStore · [#18](https://github.com/EarthW0rm/trayops/issues/18)
 **Priority:** P1
 ##### 2. Technical Specification
 - `Sources/TrayOpsCore/Platform/StateStore.swift` — `@Observable final class StateStore` with `snapshots: [String: any FeatureState]` and `set(_:_:)`. No SwiftUI (uses `Observation`).
@@ -336,7 +348,7 @@ RN-P-01, RN-P-02, RN-P-03, RN-P-08.
 
 ---
 
-#### TF-35-02: [trayops] RefreshAll handler + StatePoller (15s)
+#### TF-35-02: [trayops] RefreshAll handler + StatePoller (15s) · [#19](https://github.com/EarthW0rm/trayops/issues/19)
 **Priority:** P1
 ##### 2. Technical Specification
 - `.../Platform/RefreshAllHandler.swift` — iterates `FeatureRegistry`, calls `refresh()` on each Feature **isolating failures** (RN-P-08): exception becomes "unavailable" state; publishes to `StateStore`.
@@ -351,7 +363,7 @@ RN-P-01, RN-P-02, RN-P-03, RN-P-08.
 
 ---
 
-#### TF-35-03: [trayops] ReconcileAll handler + consolidated report
+#### TF-35-03: [trayops] ReconcileAll handler + consolidated report · [#20](https://github.com/EarthW0rm/trayops/issues/20)
 **Priority:** P1
 ##### 2. Technical Specification
 - `.../Platform/ReconcileAllHandler.swift` — iterates Functions that are `Reconcilable`, calls `reconcile()` + `refresh()`; collects `ReconcileReportDTO` (successes/failures per feature). Continues even if one fails (RN-P-03/08).
@@ -361,7 +373,7 @@ RN-P-01, RN-P-02, RN-P-03, RN-P-08.
 
 ---
 
-#### TF-35-04: [trayops] GUI — Reconcile All + state refresh
+#### TF-35-04: [trayops] GUI — Reconcile All + state refresh · [#21](https://github.com/EarthW0rm/trayops/issues/21)
 **Priority:** P1
 ##### 2. Technical Specification
 - `Sources/TrayOps/RootPanelView.swift` — panel observes `StateStore`; renders one row per Function; **Reconcile All** button dispatches `ReconcileAll`. Start `StatePoller` on launch.
@@ -372,7 +384,7 @@ plan §2.4.
 
 ---
 
-#### TF-35-05: [trayops] CLI — status and reconcile-all + E2E
+#### TF-35-05: [trayops] CLI — status and reconcile-all + E2E · [#22](https://github.com/EarthW0rm/trayops/issues/22)
 **Priority:** P1
 ##### 2. Technical Specification
 - `Sources/trayops/Commands/PlatformCommands.swift` — `status` (sends `RefreshAll` and prints snapshots) and `reconcile-all` (sends `ReconcileAll`, prints report, coherent exit code).
@@ -381,7 +393,7 @@ plan §2.4.
 
 ---
 
-## [US-36]: Docker Control Function (Rancher Desktop)
+## [US-36]: Docker Control Function (Rancher Desktop) · [#4](https://github.com/EarthW0rm/trayops/issues/4)
 
 **System:** trayops · **Estimate:** 5 SP · **Priority:** P2 · **Depends on:** US-33, US-35
 
@@ -410,7 +422,7 @@ RN-DK-01, RN-DK-02, RN-DK-03, RN-DK-04, RN-P-07, RN-P-08.
 
 ### Tasks
 
-#### TF-36-01: [trayops] DockerService (status via docker info, start/shutdown via rdctl)
+#### TF-36-01: [trayops] DockerService (status via docker info, start/shutdown via rdctl) · [#23](https://github.com/EarthW0rm/trayops/issues/23)
 **Priority:** P2
 ##### 2. Technical Specification
 - `Sources/TrayOpsCore/Features/Docker/DockerService.swift` — protocol + impl. `status()`: `docker info` (exit 0 = online, ≠ 0 = offline; binary absent = unavailable). `start()`: `rdctl start`. `shutdown()`: `rdctl shutdown`. Paths via `BinaryLocator` (RN-DK-03).
@@ -426,7 +438,7 @@ RN-DK-01, RN-DK-02, RN-DK-03, RN-DK-04, RN-P-07, RN-P-08.
 
 ---
 
-#### TF-36-02: [trayops] Docker Requests and Handlers
+#### TF-36-02: [trayops] Docker Requests and Handlers · [#24](https://github.com/EarthW0rm/trayops/issues/24)
 **Priority:** P2
 ##### 2. Technical Specification
 - `.../Docker/Requests.swift` — `ResolveDockerState`, `DockerStart`, `DockerShutdown`.
@@ -436,7 +448,7 @@ RN-DK-01, RN-DK-02, RN-DK-03, RN-DK-04, RN-P-07, RN-P-08.
 
 ---
 
-#### TF-36-03: [trayops] DockerFeature + view (panel row) + E2E interface
+#### TF-36-03: [trayops] DockerFeature + view (panel row) + E2E interface · [#25](https://github.com/EarthW0rm/trayops/issues/25)
 **Priority:** P2
 ##### 2. Technical Specification
 - `.../Docker/DockerFeature.swift` (Core) — `Feature` (without `Reconcilable`); `refresh()` → `ResolveDockerState`; `commands()`.
@@ -450,7 +462,7 @@ plan §2.5.
 
 ---
 
-#### TF-36-04: [trayops] CLI `docker` subcommands + E2E CLI
+#### TF-36-04: [trayops] CLI `docker` subcommands + E2E CLI · [#26](https://github.com/EarthW0rm/trayops/issues/26)
 **Priority:** P2
 ##### 2. Technical Specification
 - `Sources/trayops/Commands/DockerCommands.swift` — `docker status|start|shutdown`, dispatching the Requests; stdout + exit code (RN-P-06).

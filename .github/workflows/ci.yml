@@ -1,0 +1,38 @@
+name: CI
+
+# Validate every pull request: lint, build, and the full test suite
+# (unit + integration + CLI E2E + UI E2E).
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, build and test (macOS)
+    # GitHub's macOS runner ships full Xcode, so Swift Testing and the XCTest
+    # runner are present and `swift test` runs every suite natively — unlike the
+    # local Command Line Tools setup, which needs scripts/test.sh. macos-15 has
+    # Xcode 16 / Swift 6, required by Package.swift (swift-tools-version:6.0).
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode 16
+        run: |
+          XC=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1 || true)
+          if [ -n "$XC" ]; then sudo xcode-select -s "$XC"; fi
+          swift --version
+
+      - name: Lint (swift-format)
+        run: swift format lint --strict --configuration .swift-format --recursive Sources Tests Package.swift
+
+      - name: Build
+        run: swift build
+
+      - name: Test — unit + CLI E2E + UI E2E
+        run: swift test

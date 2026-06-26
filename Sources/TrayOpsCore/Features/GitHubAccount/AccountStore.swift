@@ -1,0 +1,167 @@
+import Foundation
+
+/// Validation failures when persisting an account.
+public enum AccountValidationError: Error, Equatable {
+    case emptyField(String)
+}
+
+/// Storage-boundary failures raised by the account store when an operation
+/// violates an invariant on the persisted set (independent of field validation).
+public enum AccountStoreError: Error, Equatable {
+    /// `update` was called with an id that is not present in the store.
+    case notFound
+    /// `add` was called with an id that already exists in the store.
+    case duplicateID
+}
+
+/// Persistence boundary for accounts (RN-GH-05/06). Hides the storage mechanism
+/// from the rest of the domain.
+public protocol AccountStore {
+    func all() throws -> [Account]
+    func add(_ account: Account) throws
+    func update(_ account: Account) throws
+    func remove(_ account: Account) throws
+    /// Loads the seed accounts on first run when the store is empty; starts empty
+    /// (without failing) when no valid seed source is available.
+    func seedIfEmpty(from seedURL: URL?) throws
+}
+
+/// Local JSON-file account store with atomic writes. Chosen over SwiftData because
+/// the `@Model` macro requires Xcode, which this project does not use. Adequate
+/// for the handful of account records the platform manages.
+public final class JSONAccountStore: AccountStore {
+    private struct AccountsFile: Codable {
+        var accounts: [Account]
+    }
+
+    private let url: URL
+    private let lock = NSLock()
+    private var accounts: [Account]
+
+    public init(url: URL) {
+        self.url = url
+        self.accounts = JSONAccountStore.load(from: url)
+        // The internal array is kept sorted on every mutation so `all()` can
+        // return a copy without re-sorting; normalize the loaded set up front.
+        sortAccountsLocked()
+        // Create the storage directory once here rather than on every write.
+        try? FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+    }
+
+    public func all() throws -> [Account] {
+        lock.lock()
+        defer { lock.unlock() }
+        return accounts
+    }
+
+    public func add(_ account: Account) throws {
+        try validate(account)
+        lock.lock()
+        defer { lock.unlock() }
+        guard !accounts.contains(where: { $0.id == account.id }) else {
+            throw AccountStoreError.duplicateID
+        }
+        accounts.append(account)
+        sortAccountsLocked()
+        try persistLocked()
+    }
+
+    public func update(_ account: Account) throws {
+        try validate(account)
+        lock.lock()
+        defer { lock.unlock() }
+        guard let index = accounts.firstIndex(where: { $0.id == account.id }) else {
+            throw AccountStoreError.notFound
+        }
+        var updated = account
+        updated.updatedAt = Date()
+        accounts[index] = updated
+        sortAccountsLocked()
+        try persistLocked()
+    }
+
+    public func remove(_ account: Account) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        accounts.removeAll { $0.id == account.id }
+        try persistLocked()
+    }
+
+    public func seedIfEmpty(from seedURL: URL?) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        guard accounts.isEmpty else { return }
+        guard let seedURL, let entries = AccountSeed.load(from: seedURL) else { return }
+        accounts = entries.enumerated().map { index, entry in
+            Account(
+                label: entry.label,
+                gitName: entry.gitName,
+                gitEmail: entry.gitEmail,
+                identityFile: entry.identityFile,
+                sortIndex: index
+            )
+        }
+        sortAccountsLocked()
+        try persistLocked()
+    }
+
+    // MARK: - Private
+
+    /// Must be called with `lock` held. Keeps the internal array ordered by
+    /// `sortIndex` then `label` so `all()` returns a copy without re-sorting.
+    private func sortAccountsLocked() {
+        accounts.sort { ($0.sortIndex, $0.label) < ($1.sortIndex, $1.label) }
+    }
+
+    private func validate(_ account: Account) throws {
+        try requireNonEmpty(account.label, "label")
+        try requireNonEmpty(account.gitName, "gitName")
+        try requireNonEmpty(account.gitEmail, "gitEmail")
+        try requireNonEmpty(account.identityFile, "identityFile")
+    }
+
+    private func requireNonEmpty(_ value: String, _ field: String) throws {
+        if value.trimmingCharacters(in: .whitespaces).isEmpty {
+            throw AccountValidationError.emptyField(field)
+        }
+    }
+
+    /// Must be called with `lock` held.
+    private func persistLocked() throws {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(AccountsFile(accounts: accounts))
+        try data.write(to: url, options: [.atomic])
+        // The file holds emails and key paths (PII): keep it user-only (0600).
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+    }
+
+    private static func load(from url: URL) -> [Account] {
+        let fileManager = FileManager.default
+        guard fileManager.fileExists(atPath: url.path) else { return [] }
+        guard let data = try? Data(contentsOf: url) else {
+            warn("could not read accounts file at \(url.path); starting empty")
+            return []
+        }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        do {
+            return try decoder.decode(AccountsFile.self, from: data).accounts
+        } catch {
+            // Preserve the corrupt file instead of silently overwriting it.
+            let backup = url.appendingPathExtension("corrupt")
+            try? fileManager.removeItem(at: backup)
+            try? fileManager.moveItem(at: url, to: backup)
+            warn("invalid accounts file; backed up to \(backup.path) and starting empty")
+            return []
+        }
+    }
+
+    private static func warn(_ message: String) {
+        FileHandle.standardError.write(Data("trayops: \(message)\n".utf8))
+    }
+}
