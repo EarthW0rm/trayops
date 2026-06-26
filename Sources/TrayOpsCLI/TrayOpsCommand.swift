@@ -4,7 +4,7 @@ import ArgumentParser
 /// Stories (github, status, reconcile-all, docker). With no arguments it prints
 /// help; `--help` exits 0.
 @main
-struct TrayopsCommand: AsyncParsableCommand {
+struct TrayOpsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "trayops",
         abstract: "Personal macOS tray operations platform — CLI frontend.",

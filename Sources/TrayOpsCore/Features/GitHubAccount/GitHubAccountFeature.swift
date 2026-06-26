@@ -30,10 +30,6 @@ public final class GitHubAccountFeature: Feature, Reconcilable {
         mediator.register(RemoveAccountHandler(store: store))
     }
 
-    public func commands() -> [FeatureCommand] {
-        [FeatureCommand(name: "github", abstract: "Inspect and switch the active GitHub account.")]
-    }
-
     public func refresh() async -> any FeatureState {
         do {
             return try await resolver.resolve(accounts: try store.all())

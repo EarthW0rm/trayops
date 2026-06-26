@@ -22,10 +22,6 @@ public final class DockerFeature: Feature {
         mediator.register(DockerShutdownHandler(service: service, stateStore: stateStore, featureID: id))
     }
 
-    public func commands() -> [FeatureCommand] {
-        [FeatureCommand(name: "docker", abstract: "Show and toggle the Docker engine.")]
-    }
-
     public func refresh() async -> any FeatureState {
         await service.status()
     }

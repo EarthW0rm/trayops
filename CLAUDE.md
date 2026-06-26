@@ -38,7 +38,7 @@ Design rules:
 - Frontends **contain no business logic** and do not touch services/handlers — only the Mediator and DTOs.
 - The Mediator boundary carries **DTOs** (`AccountDTO`, states), never the internal `Account` model.
 - **Single Composition Root** (`AppComposition`): app and tests use the same factory, swapping only system boundaries (`ProcessRunner`, `HOME`/paths, account store URL). This is what makes "E2E passes ⇒ app works".
-- Adding a Feature = implement `Feature` (+ `Reconcilable` if applicable) and register it in `FeatureRegistry`. **Do not modify** core, Mediator, poller, reconcile-all, or frontends (OCP).
+- Adding a Feature = implement `Feature` (+ `Reconcilable` if applicable) and register it in `AppComposition`. **Do not modify** the core, Mediator, poller, reconcile-all, or existing Features (OCP/RN-P-07). The frontends each gain one addition for the new Feature — a `case` in `RootPanelView` (GUI view) and a subcommand in the CLI root — which is inherent to rendering/parsing a new Function, not a change to existing behavior.
 - Each Feature has a single **state refresh** method `refresh()`. A `StatePoller` refreshes all of them every **15s**; `StateStore` publishes snapshots; `ReconcileAll` iterates over `Reconcilable` features.
 - A Feature failure is isolated (becomes "unavailable") and does not crash the platform.
 - External binaries (`git`, `rdctl`, `docker`) are resolved by **`BinaryLocator`** with absolute paths — the GUI does not inherit the shell PATH.

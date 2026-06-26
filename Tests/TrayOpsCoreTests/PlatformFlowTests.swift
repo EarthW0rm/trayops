@@ -29,7 +29,6 @@ private final class SpyFeature: Feature {
     }
 
     func registerHandlers(on mediator: Mediator) {}
-    func commands() -> [FeatureCommand] { [] }
     func refresh() async -> any FeatureState {
         refreshes.increment()
         return SpyState(value: stateValue)
@@ -51,7 +50,6 @@ private final class ReconcilableSpy: Feature, Reconcilable {
     struct ReconcileFailure: Error {}
 
     func registerHandlers(on mediator: Mediator) {}
-    func commands() -> [FeatureCommand] { [] }
     func refresh() async -> any FeatureState { SpyState(value: "refreshed") }
     func reconcile() async throws {
         reconciles.increment()

@@ -16,10 +16,6 @@ final class FakeFeature: Feature {
         registered = true
     }
 
-    func commands() -> [FeatureCommand] {
-        [FeatureCommand(name: id, abstract: title)]
-    }
-
     func refresh() async -> any FeatureState {
         FakeState()
     }
