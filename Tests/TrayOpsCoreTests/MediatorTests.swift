@@ -32,4 +32,9 @@ struct MediatorTests {
             _ = try await mediator.send(Ping(value: "x"))
         }
     }
+
+    // Note: double-registration of a handler for the same Request type trips an
+    // `assert` in `DefaultMediator.register`, which traps the process in debug
+    // builds. Swift Testing cannot catch that trap, so there is intentionally no
+    // test exercising it here; the single-registration path above stays valid.
 }

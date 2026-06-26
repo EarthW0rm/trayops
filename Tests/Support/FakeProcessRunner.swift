@@ -10,6 +10,11 @@ public final class FakeProcessRunner: ProcessRunner {
     public struct Invocation: Equatable, Sendable {
         public let executable: String
         public let args: [String]
+
+        public init(executable: String, args: [String]) {
+            self.executable = executable
+            self.args = args
+        }
     }
 
     public enum FakeProcessError: Error, Equatable {

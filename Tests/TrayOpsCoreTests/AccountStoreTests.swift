@@ -60,6 +60,38 @@ struct AccountStoreTests {
         #expect(try second.all().count == 1)
         #expect(try second.all().first?.label == "personal")
     }
+
+    @Test("update of an unknown id throws notFound")
+    func updateUnknownIDThrows() throws {
+        let store = JSONAccountStore(url: tempURL())
+
+        #expect(throws: AccountStoreError.notFound) {
+            try store.update(Account(label: "ghost", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"))
+        }
+        #expect(try store.all().isEmpty)
+    }
+
+    @Test("add of a duplicate id throws duplicateID")
+    func addDuplicateIDThrows() throws {
+        let store = JSONAccountStore(url: tempURL())
+        let id = UUID()
+        try store.add(Account(id: id, label: "personal", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id"))
+
+        #expect(throws: AccountStoreError.duplicateID) {
+            try store.add(Account(id: id, label: "personal-again", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id2"))
+        }
+        #expect(try store.all().count == 1)
+    }
+
+    @Test("all() returns accounts ordered by sortIndex")
+    func allReturnsSortedBySortIndex() throws {
+        let store = JSONAccountStore(url: tempURL())
+        try store.add(Account(label: "third", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id3", sortIndex: 2))
+        try store.add(Account(label: "first", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id1", sortIndex: 0))
+        try store.add(Account(label: "second", gitName: "octocat", gitEmail: "octo@example.com", identityFile: "~/.ssh/id2", sortIndex: 1))
+
+        #expect(try store.all().map(\.label) == ["first", "second", "third"])
+    }
 }
 
 @Suite("AccountSeed")

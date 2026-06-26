@@ -5,22 +5,36 @@ import TrayOpsCore
 /// (Start when offline, Shut Down when online) (RN-DK-02).
 public struct DockerContentView: View {
     let state: DockerState
+    let errorMessage: String?
     let onStart: () -> Void
     let onShutdown: () -> Void
 
-    public init(state: DockerState, onStart: @escaping () -> Void, onShutdown: @escaping () -> Void) {
+    public init(
+        state: DockerState,
+        errorMessage: String? = nil,
+        onStart: @escaping () -> Void,
+        onShutdown: @escaping () -> Void
+    ) {
         self.state = state
+        self.errorMessage = errorMessage
         self.onStart = onStart
         self.onShutdown = onShutdown
     }
 
     public var body: some View {
-        HStack {
-            Image(systemName: "shippingbox")
-            Text("Docker").font(.headline)
-            Spacer()
-            Text(state.summary).foregroundStyle(.secondary)
-            actionButton
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: "shippingbox")
+                Text("Docker").font(.headline)
+                Spacer()
+                Text(state.summary).foregroundStyle(.secondary)
+                actionButton
+            }
+            if let errorMessage {
+                Text(errorMessage)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
         }
     }
 
@@ -42,6 +56,7 @@ public struct DockerContentView: View {
 public struct DockerPanelView: View {
     private let mediator: Mediator
     private let stateStore: StateStore
+    @State private var errorMessage: String?
 
     public init(mediator: Mediator, stateStore: StateStore) {
         self.mediator = mediator
@@ -50,17 +65,24 @@ public struct DockerPanelView: View {
 
     public var body: some View {
         let state = (stateStore.snapshot(for: FeatureID.docker) as? DockerState) ?? .unavailable(reason: "unknown")
+        // No RefreshAll here: the RootPanelView issues a single coalesced refresh.
+        // This panel only reads the StateStore and dispatches actions.
         return DockerContentView(
             state: state,
+            errorMessage: errorMessage,
             onStart: { dispatch(DockerStart()) },
             onShutdown: { dispatch(DockerShutdown()) }
         )
-        .task { _ = try? await mediator.send(RefreshAll()) }
     }
 
     private func dispatch<R: Request>(_ request: R) {
         Task {
-            _ = try? await mediator.send(request)
+            do {
+                _ = try await mediator.send(request)
+                errorMessage = nil
+            } catch {
+                errorMessage = "\(error.localizedDescription)"
+            }
             _ = try? await mediator.send(RefreshAll())
         }
     }

@@ -73,7 +73,28 @@ public enum GitHubAccountError: Error, Equatable {
 
 /// Mutable holder for the last applied account, shared between the apply/reconcile
 /// handlers and the Feature's `reconcile()` (used by Reconcile All).
-public final class AccountTarget {
-    public var id: UUID?
-    public init(id: UUID? = nil) { self.id = id }
+///
+/// This is a side channel concurrently accessed by the 15s state poller and by
+/// `apply`/`reconcile` operations. Access to the backing `_id` is serialized by an
+/// internal `NSLock` to avoid a data race between those paths; the class is therefore
+/// `@unchecked Sendable` because the synchronization is performed manually rather than
+/// guaranteed by the compiler.
+public final class AccountTarget: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _id: UUID?
+
+    public var id: UUID? {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _id
+        }
+        set {
+            lock.lock()
+            defer { lock.unlock() }
+            _id = newValue
+        }
+    }
+
+    public init(id: UUID? = nil) { self._id = id }
 }

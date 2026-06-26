@@ -26,6 +26,14 @@ public final class DefaultMediator: Mediator {
 
     public func register<H: RequestHandler>(_ handler: H) {
         let key = ObjectIdentifier(H.R.self)
+        // Double-registration is a composition-time configuration bug: a second
+        // handler for the same Request type would silently shadow the first.
+        // Trap it in debug builds; in release `assert` is a no-op, so the
+        // existing last-wins behaviour and the public API are unchanged.
+        assert(
+            handlers[key] == nil,
+            "Mediator: a handler is already registered for \(String(describing: H.R.self))"
+        )
         handlers[key] = { anyRequest in
             guard let request = anyRequest as? H.R else {
                 throw MediatorError.noHandler(String(describing: type(of: anyRequest)))

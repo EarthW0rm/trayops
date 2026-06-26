@@ -88,4 +88,59 @@ struct SSHConfigRewriterTests {
             .count
         #expect(activeCount == 1)
     }
+
+    @Test("Match opens a new block — an IdentityFile inside Match is not touched")
+    func matchDelimitsBlock() {
+        let existing = "Host github.com\n    IdentityFile ~/.ssh/id_a\nMatch host bitbucket.org\n    IdentityFile ~/.ssh/id_match\n"
+
+        let output = SSHConfigRewriter.activate(path: "~/.ssh/id_a", host: host, in: existing)
+
+        // The Match block's IdentityFile stays active and uncommented.
+        #expect(output.contains("    IdentityFile ~/.ssh/id_match"))
+        #expect(!output.contains("# IdentityFile ~/.ssh/id_match"))
+        #expect(SSHConfigRewriter.activeIdentityFile(host: host, in: output) == "~/.ssh/id_a")
+    }
+
+    @Test("does not duplicate the block when a wildcard Host already matches")
+    func wildcardHostAvoidsDuplicate() {
+        let existing = "Host *\n    IdentityFile ~/.ssh/id_a\n"
+
+        let output = SSHConfigRewriter.activate(path: "~/.ssh/id_b", host: host, in: existing)
+
+        #expect(!output.contains("Host github.com"))
+        #expect(output.contains("# IdentityFile ~/.ssh/id_a"))
+        #expect(SSHConfigRewriter.activeIdentityFile(host: host, in: output) == "~/.ssh/id_b")
+    }
+
+    @Test("matches a wildcard domain pattern such as *.github.com")
+    func wildcardDomainMatches() {
+        let existing = "Host *.github.com\n    IdentityFile ~/.ssh/id_a\n"
+
+        #expect(SSHConfigRewriter.activeIdentityFile(host: "api.github.com", in: existing) == "~/.ssh/id_a")
+    }
+
+    @Test("reads an IdentityFile path wrapped in double quotes")
+    func readsQuotedPath() {
+        let existing = "Host github.com\n    IdentityFile \"~/.ssh/id with space\"\n"
+
+        #expect(SSHConfigRewriter.activeIdentityFile(host: host, in: existing) == "~/.ssh/id with space")
+    }
+
+    @Test("writes a path containing spaces back with quotes")
+    func writesSpacedPathQuoted() {
+        let output = SSHConfigRewriter.activate(path: "~/.ssh/id with space", host: host, in: "")
+
+        #expect(output.contains("IdentityFile \"~/.ssh/id with space\""))
+        #expect(SSHConfigRewriter.activeIdentityFile(host: host, in: output) == "~/.ssh/id with space")
+    }
+
+    @Test("inherits tab indentation when inserting into a tab-indented block")
+    func inheritsTabIndentation() {
+        let existing = "Host github.com\n\tUser git\n"
+
+        let output = SSHConfigRewriter.activate(path: "~/.ssh/id_a", host: host, in: existing)
+
+        #expect(output.contains("\tIdentityFile ~/.ssh/id_a"))
+        #expect(SSHConfigRewriter.activeIdentityFile(host: host, in: output) == "~/.ssh/id_a")
+    }
 }

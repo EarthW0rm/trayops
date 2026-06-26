@@ -5,6 +5,15 @@ public enum AccountValidationError: Error, Equatable {
     case emptyField(String)
 }
 
+/// Storage-boundary failures raised by the account store when an operation
+/// violates an invariant on the persisted set (independent of field validation).
+public enum AccountStoreError: Error, Equatable {
+    /// `update` was called with an id that is not present in the store.
+    case notFound
+    /// `add` was called with an id that already exists in the store.
+    case duplicateID
+}
+
 /// Persistence boundary for accounts (RN-GH-05/06). Hides the storage mechanism
 /// from the rest of the domain.
 public protocol AccountStore {
@@ -32,19 +41,31 @@ public final class JSONAccountStore: AccountStore {
     public init(url: URL) {
         self.url = url
         self.accounts = JSONAccountStore.load(from: url)
+        // The internal array is kept sorted on every mutation so `all()` can
+        // return a copy without re-sorting; normalize the loaded set up front.
+        sortAccountsLocked()
+        // Create the storage directory once here rather than on every write.
+        try? FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
     }
 
     public func all() throws -> [Account] {
         lock.lock()
         defer { lock.unlock() }
-        return accounts.sorted { ($0.sortIndex, $0.label) < ($1.sortIndex, $1.label) }
+        return accounts
     }
 
     public func add(_ account: Account) throws {
         try validate(account)
         lock.lock()
         defer { lock.unlock() }
+        guard !accounts.contains(where: { $0.id == account.id }) else {
+            throw AccountStoreError.duplicateID
+        }
         accounts.append(account)
+        sortAccountsLocked()
         try persistLocked()
     }
 
@@ -52,13 +73,13 @@ public final class JSONAccountStore: AccountStore {
         try validate(account)
         lock.lock()
         defer { lock.unlock() }
+        guard let index = accounts.firstIndex(where: { $0.id == account.id }) else {
+            throw AccountStoreError.notFound
+        }
         var updated = account
         updated.updatedAt = Date()
-        if let index = accounts.firstIndex(where: { $0.id == account.id }) {
-            accounts[index] = updated
-        } else {
-            accounts.append(updated)
-        }
+        accounts[index] = updated
+        sortAccountsLocked()
         try persistLocked()
     }
 
@@ -83,10 +104,17 @@ public final class JSONAccountStore: AccountStore {
                 sortIndex: index
             )
         }
+        sortAccountsLocked()
         try persistLocked()
     }
 
     // MARK: - Private
+
+    /// Must be called with `lock` held. Keeps the internal array ordered by
+    /// `sortIndex` then `label` so `all()` returns a copy without re-sorting.
+    private func sortAccountsLocked() {
+        accounts.sort { ($0.sortIndex, $0.label) < ($1.sortIndex, $1.label) }
+    }
 
     private func validate(_ account: Account) throws {
         try requireNonEmpty(account.label, "label")
@@ -107,10 +135,6 @@ public final class JSONAccountStore: AccountStore {
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(AccountsFile(accounts: accounts))
-        try FileManager.default.createDirectory(
-            at: url.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
         try data.write(to: url, options: [.atomic])
         // The file holds emails and key paths (PII): keep it user-only (0600).
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)

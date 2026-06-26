@@ -36,4 +36,16 @@ struct DockerUITests {
             _ = try view.inspect().find(button: "Start")
         }
     }
+
+    @Test("action error message is rendered")
+    func actionErrorIsRendered() throws {
+        let view = DockerContentView(
+            state: .offline,
+            errorMessage: "rdctl command failed (exit code 1)",
+            onStart: {},
+            onShutdown: {}
+        )
+
+        _ = try view.inspect().find(text: "rdctl command failed (exit code 1)")
+    }
 }

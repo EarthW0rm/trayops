@@ -88,9 +88,16 @@ public struct GitHubAccountPanelView: View {
     }
 
     private func initialLoad() async {
-        accounts = (try? await mediator.send(ListAccounts())) ?? []
-        if selectedID == nil { selectedID = accounts.first?.id }
-        _ = try? await mediator.send(RefreshAll())
+        // Only load the account list here; the RootPanelView issues a single
+        // coalesced RefreshAll, so this panel just reads the StateStore for state.
+        // A ListAccounts failure surfaces as an error message instead of an
+        // indistinguishable empty picker.
+        do {
+            accounts = try await mediator.send(ListAccounts())
+            if selectedID == nil { selectedID = accounts.first?.id }
+        } catch {
+            errorMessage = "\(error.localizedDescription)"
+        }
     }
 
     private func dispatch(_ kind: ActionKind) {

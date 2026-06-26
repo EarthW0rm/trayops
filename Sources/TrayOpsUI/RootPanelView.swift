@@ -40,6 +40,10 @@ public struct RootPanelView: View {
         }
         .padding(12)
         .frame(width: 300)
+        // Single coalesced refresh for the whole panel: the per-feature panels
+        // only read the StateStore, so one RefreshAll here (plus the periodic
+        // poller and post-action refreshes) avoids redundant concurrent runs.
+        .task { _ = try? await composition.mediator.send(RefreshAll()) }
     }
 
     private func reconcileAll() {

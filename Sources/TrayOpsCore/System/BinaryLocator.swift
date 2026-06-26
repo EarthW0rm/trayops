@@ -46,6 +46,18 @@ public struct DefaultBinaryLocator: BinaryLocator {
         process.waitUntilExit()
         guard process.terminationStatus == 0 else { return nil }
         let path = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
-        return path.isEmpty ? nil : path
+        guard !path.isEmpty else { return nil }
+        // `which` resolves via the inherited PATH, which the GUI must not trust:
+        // a polluted PATH could point a tool name at a malicious binary
+        // (RN-DK-03). Accept the result only when it lives under one of the
+        // trusted searchPaths; otherwise reject it (defense against PATH injection).
+        guard isUnderTrustedSearchPath(path) else { return nil }
+        return path
+    }
+
+    private func isUnderTrustedSearchPath(_ path: String) -> Bool {
+        searchPaths.contains { directory in
+            path == directory || path.hasPrefix("\(directory)/")
+        }
     }
 }
