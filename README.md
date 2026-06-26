@@ -125,6 +125,64 @@ Run them with `./scripts/test.sh` (or `make test`) — **not** bare `swift test`
 
 See **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
+## Built with Scrapforge — proof of concept
+
+This repository is a **proof of concept** for **Scrapforge**, an agentic
+software-engineering ecosystem (a set of skills and review agents for Spec-Driven
+Development, multi-perspective review and delivery, running on Claude Code).
+Almost the entire engineering lifecycle here — from an approved SDD spec to a green
+CI pipeline — was driven by Scrapforge, with a human acting as the **conductor and
+decision-maker**: Scrapforge executes, reports and flags trade-offs; the human owns
+the business and architecture decisions.
+
+### What Scrapforge executed
+
+| Stage | Skill | Outcome |
+|---|---|---|
+| Build the backlog | `scrapforge-forge` | US-33 → US-36 implemented test-first on one branch; atomic commits; GitHub issues closed as tasks completed |
+| Multi-perspective review | `multi-spec-review` | 9 reviewer agents **in parallel** (architecture, QA, security, testing, clean-code, performance, observability, homogeneity, ethics) → consolidated GO/NO-GO → fixes |
+| Apply the review backlog | `mimic-loop` | Controller + subagents: 6 units **in parallel** over disjoint files, integrated centrally; then a serial cross-cutting wave |
+| Process guidance | `mentor-unified-process` | Diagnosed the documentation "state gap" through the Unified Process lens |
+| Reconcile the docs | `scrapforge-blueprint` (SDD) | Produced the as-built increment ([`docs/specs/trayops-platform/as-built.md`](docs/specs/trayops-platform/as-built.md)) |
+
+Supporting practices throughout: test-driven development, Conventional Commits,
+parallel-agent dispatch, and verification-before-completion.
+
+### How it adapted — key inferences
+
+Scrapforge's skills default to a Node.js / NestJS corporate stack. It **inferred
+this project's real context** — a personal Swift 6 / SPM macOS app, no Xcode, no
+corporate services — and adapted automatically:
+
+- Skipped the inapplicable corporate tooling (messaging, structured logging, issue
+  tracker, code-quality gate) and used `swift build` / `swift test`.
+- Reasoned about hard environment constraints, resolving them autonomously or
+  **escalating genuine decisions to the human**:
+  - SwiftData's `@Model` macro requires Xcode (excluded) → escalated → **local JSON
+    store** behind the same `AccountStore` protocol.
+  - Swift Testing isn't on the Command Line Tools' default paths → installed an
+    official toolchain, found it breaks the ViewInspector dependency on the newest
+    SDK, and settled on the CLT toolchain + a `scripts/test.sh` wrapper.
+  - `TrayOps` / `trayops` collide on the case-insensitive filesystem → renamed the
+    GUI product to `TrayOpsApp` and split the views into a `TrayOpsUI` library.
+- Ran a privacy sweep before publishing (no real identities, secrets or local paths
+  in the tree or history).
+
+### By the numbers
+
+| Metric | Value |
+|---|---|
+| User Stories / Tasks | 4 / ~22 |
+| Source | ~70 files, ~3.3k lines of Swift |
+| Tests | 82 across 22 suites (unit + integration + CLI E2E + UI E2E) |
+| Review | 9 parallel lenses; 1 Critical + several Major findings, fixed and re-verified |
+| Parallel orchestration | up to 6 subagents concurrently (mimic-loop) |
+| CI | lint + build + full suite, green in ~1 minute on a macOS runner |
+
+> The human conductor approved the SDD, decided at every genuine fork (persistence,
+> test strategy) and owns the result. Scrapforge did the engineering legwork,
+> parallelized the work, and surfaced the trade-offs.
+
 ## License
 
 [MIT](LICENSE). Third-party attributions in
