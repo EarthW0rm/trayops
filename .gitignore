@@ -24,6 +24,9 @@ Package.resolved
 *.o
 *.swiftdeps
 
+# Packaged app bundle (built by scripts/build-app.sh)
+dist/
+
 # === Serena (cache and local overrides) ===
 .serena/cache/
 .serena/project.local.yml

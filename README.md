@@ -1,5 +1,7 @@
 # TrayOps
 
+<img src="Resources/AppIcon-preview.png" width="116" align="right" alt="TrayOps icon">
+
 A personal macOS **menu-bar (tray) platform** where each machine routine is a
 first-class, pluggable **Function**. The platform shows each Function's current
 **state**, lets you trigger its **actions**, refreshes all states periodically,
@@ -69,10 +71,12 @@ swift build                       # build core, UI, GUI (TrayOpsApp) and CLI (tr
 swift run TrayOpsApp              # launch the app in the menu bar (no Dock icon)
 swift run trayops --help          # CLI — full parity with the GUI
 ./scripts/test.sh                 # run the test suites (see INSTALL.md for why)
+
+make app                          # package a standalone dist/TrayOpsApp.app
 ```
 
-See **[INSTALL.md](INSTALL.md)** for prerequisites, the toolchain note, and account
-seeding.
+See **[INSTALL.md](INSTALL.md)** for prerequisites, the toolchain note, installing
+**permanently as a `.app`** (with login-at-startup), and account seeding.
 
 ## CLI
 

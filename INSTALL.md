@@ -40,6 +40,50 @@ swift build -c release
 cp .build/release/trayops /usr/local/bin/trayops
 ```
 
+## Install permanently as an app
+
+`swift run TrayOpsApp` is fine for development, but it ties the app to the terminal
+session. To install it as a standalone, always-available menu-bar app, package it
+into a `TrayOpsApp.app` bundle.
+
+```bash
+make app                 # builds release + assembles dist/TrayOpsApp.app
+# or: ./scripts/build-app.sh
+
+cp -R dist/TrayOpsApp.app /Applications/
+open /Applications/TrayOpsApp.app
+```
+
+`scripts/build-app.sh` builds the release binary, writes `Info.plist`
+(`LSUIElement` = a menu-bar agent, no Dock icon), copies the icon, and ad-hoc
+code-signs the bundle. The app's icon is **`Resources/AppIcon.icns`** (committed). To
+change the design, edit `scripts/generate-icon.swift` and regenerate:
+
+```bash
+make icon                # regenerates Resources/AppIcon.icns (+ a PNG preview)
+```
+
+### Launch at login
+
+So TrayOps starts with your session:
+
+- **System Settings** → **General** → **Login Items** → **Open at Login** → `+` →
+  select `/Applications/TrayOpsApp.app`, or
+- via the terminal:
+
+  ```bash
+  osascript -e 'tell application "System Events" to make new login item at end with properties {path:"/Applications/TrayOpsApp.app", hidden:true}'
+  ```
+
+### Notes
+
+- The bundle is **ad-hoc signed** (no Apple Developer account). On first launch macOS
+  Gatekeeper may warn — right-click the app → **Open**, or allow it under
+  **System Settings → Privacy & Security**.
+- To update: pull, run `make app`, then `cp -R dist/TrayOpsApp.app /Applications/`
+  (replacing the old copy).
+- `dist/` is gitignored — the bundle is a build output, not committed.
+
 ## Configuring accounts (seed)
 
 On first run the account list is empty. You can add accounts via the GUI/CLI, or seed
