@@ -66,6 +66,14 @@ Behavior is specified before code under `docs/specs/trayops-platform/`
 (`spec.md` → `plan.md` → `tasks.md`). When code and spec diverge, capture the change
 as a new increment artifact rather than letting the docs drift.
 
+## Continuous integration
+
+Every pull request runs `.github/workflows/ci.yml` on a macOS runner: **lint**
+(`swift format`), **build**, and the **full test suite** (unit + CLI E2E + UI E2E).
+CI uses `swift test` directly because the GitHub runner ships full Xcode; locally
+(Command Line Tools) use `./scripts/test.sh`. Reproduce the lint with `make lint`
+and auto-fix with `make format` before opening a PR.
+
 ## Commits
 
 - **Conventional Commits**: `type(scope): subject` (e.g. `feat(docker): ...`,

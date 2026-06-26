@@ -2,6 +2,8 @@
 
 <img src="Resources/AppIcon-preview.png" width="116" align="right" alt="TrayOps icon">
 
+[![CI](https://github.com/EarthW0rm/trayops/actions/workflows/ci.yml/badge.svg)](https://github.com/EarthW0rm/trayops/actions/workflows/ci.yml)
+
 A personal macOS **menu-bar (tray) platform** where each machine routine is a
 first-class, pluggable **Function**. The platform shows each Function's current
 **state**, lets you trigger its **actions**, refreshes all states periodically,
